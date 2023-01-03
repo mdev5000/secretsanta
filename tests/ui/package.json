@@ -1,12 +1,12 @@
 {
-	"name": "secretsanta-ui-test",
-	"version": "0.0.1",
-	"scripts": {
-		"test": "playwright test --trace on",
-		"report": "playwright show-report",
-	},
-	"devDependencies": {
-		"@playwright/test": "^1.28.1",
-	},
-	"type": "module"
+  "name": "secretsanta-test-ui",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "playwright test --trace on",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.28.1"
+  },
+  "type": "module"
 }

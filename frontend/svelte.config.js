@@ -1,13 +1,11 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/kit/vite';
-// import path from "path";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
-
 
 	kit: {
 		adapter: adapter({
@@ -18,8 +16,10 @@ const config = {
 			entries: []
 		},
 		paths: {
+			// Note: this path is replaced as part of the build process, see the assets.replacePaths makefile command
+			// for more details.
 			assets: "http://localhost:3000/replaceme/assets",
-			base: "/spa"
+			base: "/app"
 		},
 	},
 
