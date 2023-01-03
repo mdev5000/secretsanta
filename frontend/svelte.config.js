@@ -18,7 +18,7 @@ const config = {
 			entries: []
 		},
 		paths: {
-			assets: "http://localhost:3000/assets",
+			assets: "http://localhost:3000/replaceme/assets",
 			base: "/spa"
 		},
 	},
