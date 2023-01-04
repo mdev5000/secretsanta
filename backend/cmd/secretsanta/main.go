@@ -1,6 +1,12 @@
 package main
 
-import "github.com/mdev5000/secretsanta/internal/server"
+import (
+	"embed"
+	"github.com/mdev5000/secretsanta/internal/server"
+)
+
+//go:embed all:embedded/*
+var spaContent embed.FS
 
 func main() {
 	if err := run(); err != nil {
@@ -9,7 +15,9 @@ func main() {
 }
 
 func run() error {
-	config := server.Config{}
+	config := server.Config{
+		SpaContent: spaContent,
+	}
 
-	return server.Server(config).Start(":3000")
+	return server.Server(&config).Start(":3000")
 }
