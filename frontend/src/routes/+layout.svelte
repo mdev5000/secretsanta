@@ -1,12 +1,35 @@
-<script>
-	import Header from './Header.svelte';
-	import './styles.css';
+<script lang="ts">
+	import TopAppBar, { Row, Section, Title } from '@smui/top-app-bar';
+	import IconButton from '@smui/icon-button';
+	import {base} from "$app/paths";
 
 	export const ssr = false;
 </script>
 
 <div class="app">
-	<Header />
+
+	<div class="top-bar">
+		<TopAppBar
+				class="top-bar"
+				variant="static"
+		>
+			<Row>
+				<Section>
+					<IconButton class="material-icons">menu</IconButton>
+					<Title><a href="{base}/">Secret Santa</a></Title>
+				</Section>
+				<Section>
+					<a href="{base}/example">Example</a>
+					<a href="{base}/about">About</a>
+				</Section>
+				<Section align="end" toolbar>
+					<IconButton class="material-icons" aria-label="Download">file_download</IconButton>
+					<IconButton class="material-icons" aria-label="Print this page">print</IconButton>
+					<IconButton class="material-icons" aria-label="Bookmark this page">bookmark</IconButton>
+				</Section>
+			</Row>
+		</TopAppBar>
+	</div>
 
 	<main>
 		<slot />
@@ -17,11 +40,20 @@
 	</footer>
 </div>
 
-<style>
+<style lang="scss">
 	.app {
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
+	}
+
+	.top-bar {
+		a {
+			padding-left: 5px;
+			padding-right: 5px;
+			color: white;
+			text-decoration: none;
+		}
 	}
 
 	main {
