@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
+	"github.com/mdev5000/secretsanta/internal/appcontext"
 	"github.com/mdev5000/secretsanta/internal/server"
+	"github.com/mdev5000/secretsanta/internal/setup"
 )
 
 //go:embed all:embedded/*
@@ -15,9 +17,12 @@ func main() {
 }
 
 func run() error {
-	config := server.Config{
-		SpaContent: spaContent,
+	ac := appcontext.AppContext{
+		SetupService: &setup.Service{},
+		SPAContent:   spaContent,
 	}
 
-	return server.Server(&config).Start(":3000")
+	config := server.Config{}
+
+	return server.Server(&ac, &config).Start(":3000")
 }
