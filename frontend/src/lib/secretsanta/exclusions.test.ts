@@ -1,5 +1,5 @@
 import {expect, test} from 'vitest'
-import {ExclusionOperation as O, compileExclusions} from './exclusions'
+import {ExclusionOperation as O, compileExclusions, toExclusions} from './exclusions'
 import type {ExclusionItem} from './exclusions'
 
 function withOp(original: O, next: O, expected: boolean) {
@@ -83,3 +83,31 @@ test("merges exclusion lists", () => {
         }
     })
 });
+
+test("toExclusions - can format results", () => {
+    const exclusions = toExclusions({
+        'user1': {
+            'user2': true,
+            'user3': false,
+            'user4': true,
+            'user5': true,
+            'user6': false,
+            'user7': false,
+            'user8': true,
+            'user9': true,
+        },
+        'user2': {
+            'user1': true,
+            'user4': true,
+        },
+        'user3': {
+            'user1': false,
+            'user5': false,
+        },
+    })
+
+    expect(exclusions).toStrictEqual({
+        'user1': ['user2', 'user4', 'user5', 'user8', 'user9'],
+        'user2': ['user1', 'user4'],
+    })
+})

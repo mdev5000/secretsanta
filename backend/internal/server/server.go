@@ -30,7 +30,7 @@ func Server(ac *appcontext.AppContext, config *Config) *echo.Echo {
 	contentRewrite := middleware.Rewrite(map[string]string{"/*": "/embedded/$1"})
 	e.GET("assets/*", contentHandler, contentRewrite)
 
-	appGroup := e.Group("/")
+	appGroup := e.Group("")
 
 	if !ac.SetupService.IsSetup() {
 		appGroup.Use(mw.IsSetup(ac.SetupService))
@@ -41,6 +41,7 @@ func Server(ac *appcontext.AppContext, config *Config) *echo.Echo {
 	appGroup.GET("app/*", homePage)
 
 	appGroup.GET("/", func(c echo.Context) error {
+		fmt.Println("here")
 		return c.Redirect(http.StatusTemporaryRedirect, "/app")
 	})
 

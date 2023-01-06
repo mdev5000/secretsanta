@@ -1,29 +1,53 @@
-
 export enum ExclusionOperation {
     Default = "default",
     Exclude = "exclude",
     Include = "include"
 }
 
-export type ExclusionOpList = { [prop: string]: ExclusionOperation }
-export type ExclusionItem = { [prop: string]: ExclusionOpList };
+export type UserID = string;
+
+export type ExclusionOpList = { [toUser: UserID]: ExclusionOperation };
+export type ExclusionItem = { [fromUser: UserID]: ExclusionOpList };
 
 export type Reversals = {
-    [prop: string]: {
-        [prop: string]: boolean
+    [fromUser: UserID]: {
+        [toUser: UserID]: boolean
     }
 };
 
-export type ExclusionList = { [prop: string]: boolean }
-export type Exclusions = { [prop: string]: ExclusionList };
+export type ExclusionList = { [toUser: UserID]: boolean }
+export type ExclusionResults = { [fromUser: UserID]: ExclusionList };
 
-export function compileExclusions(exclusions: ExclusionItem[], reversals: Reversals): Exclusions {
-    const result = exclusions.reduce((result, e) => {
-        for (const user in e) {
-            result[user] = compileUsersExclusions(fetchExclusion(result, user), e[user]);
+export type Exclusions = { [fromUser: UserID]: UserID[] };
+
+export function toExclusions(result: ExclusionResults): Exclusions {
+    const out: Exclusions = {};
+
+    for (const fromUser in result) {
+        const userExclusions = result[fromUser];
+        const userOut = [];
+        for (const toUser in userExclusions) {
+            if (userExclusions[toUser]) {
+                userOut.push(toUser);
+            }
         }
-        return result;
-    }, {} as Exclusions);
+
+        if (userOut.length) {
+            out[fromUser] = userOut;
+        }
+    }
+
+    return out;
+}
+
+
+export function compileExclusions(exclusions: ExclusionItem[], reversals: Reversals): ExclusionResults {
+    const result = exclusions.reduce((r, e) => {
+        for (const user in e) {
+            r[user] = compileUsersExclusions(fetchExclusion(r, user), e[user]);
+        }
+        return r;
+    }, {} as ExclusionResults);
 
     for (const fromUser in reversals) {
         const userReversals = reversals[fromUser];
@@ -64,7 +88,7 @@ function handleMissing(r: boolean): boolean {
     return r === undefined ? false : r;
 }
 
-function fetchExclusion(result: Exclusions, user: string): ExclusionList {
+function fetchExclusion(result: ExclusionResults, user: UserID): ExclusionList {
     if (result[user] === undefined) {
         result[user] = {};
     }
