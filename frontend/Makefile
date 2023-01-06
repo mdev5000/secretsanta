@@ -1,4 +1,7 @@
 
+sp:
+	npm run smui-prepare
+
 build: FORCE
 	npm run build
 	$(MAKE) assets.replacePaths
