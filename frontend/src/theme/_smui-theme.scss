@@ -44,10 +44,12 @@ html {
 
 h1 {
   @include typography.typography('headline1');
+  font-size: 3.5rem;
 }
 
 h2, .h2 {
   @include typography.typography('headline2');
+  font-size: 3.0rem;
 }
 
 h3, .h3 {
