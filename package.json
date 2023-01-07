@@ -1,0 +1,31 @@
+{
+  "name": "secretsanta",
+  "version": "1.0.0",
+  "description": "Secret Santa management web application.",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "schema.gen": "node ./scripts/schema-generate.js generate",
+    "schema.clean": "node ./scripts/schema-generate.js clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdev5000/secretsanta.git"
+  },
+  "keywords": [
+    "go",
+    "javascript",
+    "typescript",
+    "secret santa",
+    "gift exchange"
+  ],
+  "author": "Matt Harrison",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mdev5000/secretsanta/issues"
+  },
+  "homepage": "https://github.com/mdev5000/secretsanta#readme"
+}
