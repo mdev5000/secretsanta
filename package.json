@@ -9,7 +9,8 @@
   },
   "scripts": {
     "schema.gen": "node ./scripts/schema-generate.js generate",
-    "schema.clean": "node ./scripts/schema-generate.js clean"
+    "schema.clean": "node ./scripts/schema-generate.js clean",
+    "schema.dryrun": "node ./scripts/schema-generate.js dry-run"
   },
   "repository": {
     "type": "git",

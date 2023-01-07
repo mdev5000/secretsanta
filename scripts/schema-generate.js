@@ -7,31 +7,48 @@ const frontendPath = path.join("frontend", "src", "lib", "requests");
 const backendPath = path.join("backend", "internal", "requests");
 let schemaPath = 'schemas';
 
-function generateSchema() {
-    console.log("Generating schemas");
+function generateSchema(schemaPath, parts, dryRun) {
     fs.readdir(schemaPath, (err, files) => {
         if (err) {
             throw err;
         }
         files.forEach(file => {
-            const fullPath = path.resolve(schemaPath, file);
-            if (fs.lstatSync(fullPath).isDirectory()) {
+            if (fs.lstatSync(path.resolve(schemaPath, file)).isDirectory()) {
+                if (dryRun) {
+                    console.log("folder", file);
+                }
+                generateSchema(path.join(schemaPath, file), [...parts, file], dryRun);
                 return;
             }
-            const parts = file.split(".");
-            const nameParts = parts.slice(0, parts.length - 2);
+
+            if (dryRun) {
+                console.log("file", file);
+            }
+
+            const fullPath = path.join(schemaPath, file)
+            const fileParts = file.split(".");
+            const nameParts = [...parts, fileParts[0]];
             const frPath = path.join.apply(path, [frontendPath, ...nameParts]);
             const baPath = path.join.apply(path, [backendPath, ...nameParts]);
             const goPackage = nameParts[nameParts.length - 1];
 
-            fs.mkdirSync(frPath, {recursive: true});
-            fs.mkdirSync(baPath, {recursive: true});
+            const frontendCmd = `jtd-codegen "${fullPath}" --typescript-out "${frPath}"`;
+            const backendCmd = `jtd-codegen "${fullPath}" --go-out "${baPath}" --go-package "${goPackage}"`;
 
-            exec(`jtd-codegen schemas/login.jtd.json --typescript-out "${frPath}"`)
-            exec(`jtd-codegen schemas/login.jtd.json --go-out "${baPath}" --go-package "${goPackage}"`)
+            if (dryRun) {
+                console.log("  mk", frPath);
+                console.log("  mk", baPath);
+                console.log(" ", frontendCmd);
+                console.log(" ", backendCmd);
+            } else {
+                fs.mkdirSync(frPath, {recursive: true});
+                fs.mkdirSync(baPath, {recursive: true});
+                exec(frontendCmd)
+                exec(backendCmd);
+            }
+
         });
     });
-    console.log("done.")
 }
 
 function cleanSchemaDirs() {
@@ -51,7 +68,12 @@ function runAction(action) {
             cleanSchemaDirs();
             return;
         case "generate":
-            generateSchema();
+            console.log("Generating schemas");
+            generateSchema(schemaPath, [], false);
+            console.log("done.")
+            return;
+        case "dry-run":
+            generateSchema(schemaPath, [], true);
             return;
         default:
             throw `unknown action ${action}`;

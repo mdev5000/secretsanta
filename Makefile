@@ -11,6 +11,8 @@ schemas.clean:
 # Fully rebuild the project.
 build.refresh: schemas.refresh build
 
+# Compiles the frontend SPA and moves the resulting files into the backend project to be embedded in the resulting
+# backend binary and then compiles the backend binary.
 build: build.frontend
 	@rm -rf $(SPA_EMBED_PATH)
 	@mkdir $(SPA_EMBED_PATH)
