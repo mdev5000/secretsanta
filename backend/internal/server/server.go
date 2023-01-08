@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -18,12 +19,16 @@ type Config struct {
 var readIndexFile = sync.Once{}
 var indexFile []byte
 
-func Server(ac *appcontext.AppContext, config *Config) *echo.Echo {
+func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *echo.Echo {
 
 	e := echo.New()
 
-	setupHandler := handlers.NewSetupHandler(ac.SetupService)
-	e.POST("/setup", setupHandler.FinalizeSetup)
+	isSetup, _ := ac.SetupService.IsSetup(ctx)
+
+	if !isSetup {
+		setupHandler := handlers.NewSetupHandler(ac.SetupService)
+		e.POST("api/setup", setupHandler.FinalizeSetup)
+	}
 
 	// Set up the assets file server.
 	contentHandler := echo.WrapHandler(http.FileServer(http.FS(ac.SPAContent)))
@@ -32,7 +37,7 @@ func Server(ac *appcontext.AppContext, config *Config) *echo.Echo {
 
 	appGroup := e.Group("")
 
-	if !ac.SetupService.IsSetup() {
+	if !isSetup {
 		appGroup.Use(mw.IsSetup(ac.SetupService))
 	}
 
@@ -41,9 +46,13 @@ func Server(ac *appcontext.AppContext, config *Config) *echo.Echo {
 	appGroup.GET("app/*", homePage)
 
 	appGroup.GET("/", func(c echo.Context) error {
-		fmt.Println("here")
 		return c.Redirect(http.StatusTemporaryRedirect, "/app")
 	})
+
+	apiGroup := e.Group("api")
+
+	userHandler := handlers.NewUserHandler(ac.UserService)
+	apiGroup.POST("login", userHandler.Login)
 
 	return e
 }
