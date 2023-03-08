@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package requests;
+
+import "user.proto";
+import "family.proto";
+
+option go_package = "requests/gen";
+
+message Setup {
+  User user = 1;
+  Family family = 2;
+}

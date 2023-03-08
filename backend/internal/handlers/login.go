@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/mdev5000/secretsanta/internal/requests/login"
+	"github.com/mdev5000/secretsanta/internal/requests/gen"
 	"github.com/mdev5000/secretsanta/internal/user"
+	"github.com/mdev5000/secretsanta/util/requests"
 	"net/http"
 )
 
@@ -19,13 +19,16 @@ func NewUserHandler(svc *user.Service) *UserHandler {
 func (h *UserHandler) Login(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var data login.Login
-	if err := c.Bind(&data); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("bad data: %w", err))
+	var data gen.Login
+
+	if err := requests.UnmarshalJSON(c, &data); err != nil {
+		// log error
+		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
 	}
 
 	u, err := h.svc.Login(ctx, data.Username, []byte(data.Password))
 	if err != nil {
+		// log error
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid credentials")
 	}
 

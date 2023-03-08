@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package requests;
+
+option go_package = "requests/gen";
+
+message Login {
+  string username = 1;
+  string password = 2;
+}

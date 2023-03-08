@@ -13,7 +13,15 @@ import (
 	"sync"
 )
 
+type Environment string
+
+const (
+	Dev  Environment = "dev"
+	Prod Environment = "prod"
+)
+
 type Config struct {
+	Environment Environment
 }
 
 var readIndexFile = sync.Once{}
@@ -37,6 +45,16 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 
 	appGroup := e.Group("")
 
+	if config.Environment == Dev {
+		appGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				fmt.Println("setting origin")
+				c.Response().Header().Add("Access-Control-Allow-Origin", "*")
+				return next(c)
+			}
+		})
+	}
+
 	if !isSetup {
 		appGroup.Use(mw.IsSetup(ac.SetupService))
 	}
@@ -47,6 +65,10 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 
 	appGroup.GET("/", func(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/app")
+	})
+
+	appGroup.GET("/example", func(c echo.Context) error {
+		return c.String(200, "yay")
 	})
 
 	apiGroup := e.Group("api")

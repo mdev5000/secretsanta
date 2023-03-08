@@ -8,9 +8,6 @@
     "doc": "docs"
   },
   "scripts": {
-    "schema.gen": "node ./scripts/schema-generate.js generate",
-    "schema.clean": "node ./scripts/schema-generate.js clean",
-    "schema.dryrun": "node ./scripts/schema-generate.js dry-run"
   },
   "repository": {
     "type": "git",
@@ -28,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/mdev5000/secretsanta/issues"
   },
-  "homepage": "https://github.com/mdev5000/secretsanta#readme"
+  "homepage": "https://github.com/mdev5000/secretsanta#readme",
+  "devDependencies": {
+    "@protobuf-ts/plugin": "^2.8.2"
+  }
 }

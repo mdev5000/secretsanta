@@ -40,7 +40,9 @@ func run() error {
 
 	ac.SetupService = setup.NewSetupService(ac.UserService)
 
-	config := server.Config{}
+	config := server.Config{
+		Environment: server.Dev,
+	}
 
 	return server.Server(ctx, &ac, &config).Start(":3000")
 }

@@ -1,6 +1,6 @@
-
 <script>
     import Button, {Label} from '@smui/button';
+    import {get} from "$lib/rest/rest"
 
     let another = 0;
     let clicked = 0;
@@ -13,11 +13,20 @@
         another = 3 * clicked3;
     }
 
+    async function fetchIt() {
+        console.log("fetching")
+        const result = await get("example");
+        console.log("result", result);
+    }
+
 </script>
 
 <div>
     <Button on:click={() => clicked++} variant="raised">
         <Label>Raised</Label>
+    </Button>
+    <Button on:click={fetchIt} variant="raised">
+        <Label>Fetch</Label>
     </Button>
     <div>Clicked {clicked}</div>
     <div>Clicked {clicked2}</div>

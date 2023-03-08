@@ -2,6 +2,10 @@
  
 Work in progress, please check back later.
 
+## Environment Setup
+
+See instructions [here](./docs/dev-setup.md) for setting up your environment.
+
 ## Build the project
 
 ```bash

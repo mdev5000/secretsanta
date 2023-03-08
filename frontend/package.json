@@ -45,5 +45,9 @@
 		"vite": "^4.0.0",
 		"vitest": "^0.25.3"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"@protobuf-ts/runtime": "^2.8.2",
+		"axios": "^1.2.2"
+	}
 }

@@ -1,18 +1,17 @@
 
-# Development Environent Setup
+# Development Environment Setup
 
-## Prerequisites
+## 1. Prerequisites
 
 Requires:
 - **Go 1.19**
 - **NPM v18**
 - Docker
 - Docker compose
+- [protoc](https://grpc.io/docs/protoc-installation/)
 
-### Install jtd-codegen
+### 2. Install deps
 
-If you need to modify request definitions you'll need to download **jtd-codegen**. Instructions can be found
-[here](https://jsontypedef.com/docs/jtd-codegen/#installing-jtd-codegen).
-
-**jtd-codegen** is used for generating request objections to maintain the client / server contract. See
-[here](https://jsontypedef.com/docs/jtd-codegen/) for details.
+```bash
+make deps.install
+```
