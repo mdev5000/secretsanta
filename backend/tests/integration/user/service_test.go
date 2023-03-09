@@ -50,11 +50,15 @@ func Test_canLoginNewUsers(t *testing.T) {
 	err := svc.Create(ctx, &u, []byte("mypassword"))
 	require.NoError(t, err)
 
-	user2, err := svc.Login(ctx, u.Username, []byte("mypassword"))
-	require.NoError(t, err)
-	require.Equal(t, user2.ID, u.ID)
+	t.Run("no error when password ok", func(t *testing.T) {
+		user2, err := svc.Login(ctx, u.Username, []byte("mypassword"))
+		require.NoError(t, err)
+		require.Equal(t, user2.ID, u.ID)
+	})
 
-	user3, err := svc.Login(ctx, u.Username, []byte("badpassword"))
-	require.Error(t, err)
-	require.Nil(t, user3)
+	t.Run("error when password is invalid", func(t *testing.T) {
+		user3, err := svc.Login(ctx, u.Username, []byte("badpassword"))
+		require.Error(t, err)
+		require.Nil(t, user3)
+	})
 }
