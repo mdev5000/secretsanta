@@ -40,7 +40,15 @@ npm run dev
 
 ## Testing
 
-### Acceptance tests
+### Run all tests
+
+In progress...
+
+```bash
+./scripts/run-test-ui.sh
+```
+
+### UI tests
 
 ```bash
 cd tests/ui
