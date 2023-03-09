@@ -4,7 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mdev5000/secretsanta/internal/requests/gen"
 	"github.com/mdev5000/secretsanta/internal/user"
-	"github.com/mdev5000/secretsanta/util/requests"
+	"github.com/mdev5000/secretsanta/internal/util/requests"
 	"net/http"
 )
 
