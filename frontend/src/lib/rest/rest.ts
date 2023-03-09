@@ -1,6 +1,7 @@
 import axios from "axios";
 import type {AxiosResponse} from "axios";
 import type {PartialMessage} from "@protobuf-ts/runtime";
+import { dev } from '$app/environment';
 
 export type Response = AxiosResponse;
 
@@ -27,7 +28,10 @@ export async function getData<T extends object>(r: Retrievable<T>, uri: string):
     return new Result(response.status, result);
 }
 
-export async function get(uri: string): Promise<Response> {
-    const url = "http://localhost:3000"
+async function get(uri: string): Promise<Response> {
+    let url = "";
+    if (dev) {
+        url = "http://localhost:3000"
+    }
     return await axios.get(`${url}${uri}`);
 }
