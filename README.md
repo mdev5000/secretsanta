@@ -19,4 +19,4 @@ make build.refresh
 
 ## Development
 
-See [Dev setup](./docs/dev-setup.md) for details.
+See [Development](./docs/development.md) docs for details.

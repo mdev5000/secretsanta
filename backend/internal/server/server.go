@@ -47,13 +47,9 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 
 	appGroup := e.Group("")
 
+	// If environment is development, setup development middlewares
 	if config.Environment == Dev {
-		appGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-			return func(c echo.Context) error {
-				c.Response().Header().Add("Access-Control-Allow-Origin", "*")
-				return next(c)
-			}
-		})
+		appGroup.Use(mw.Dev())
 	}
 
 	if !isSetup {

@@ -9,6 +9,7 @@ import (
 	"github.com/mdev5000/secretsanta/internal/server"
 	"github.com/mdev5000/secretsanta/internal/setup"
 	"github.com/mdev5000/secretsanta/internal/user"
+	"os"
 )
 
 //go:embed all:embedded/*
@@ -41,7 +42,11 @@ func run() error {
 	ac.SetupService = setup.NewSetupService(ac.UserService)
 
 	config := server.Config{
-		Environment: server.Dev,
+		Environment: server.Prod,
+	}
+
+	if os.Getenv("ENV") == "development" {
+		config.Environment = server.Dev
 	}
 
 	return server.Server(ctx, &ac, &config).Start(":3000")
