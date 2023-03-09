@@ -8,8 +8,7 @@
 which are then embedded in the backend Go binary.
 
 
-`schemas/` contains [json type definitions](https://jsontypedef.com/) for generating Go and Typescript request
-datastructures and can possibly be used to validate requests on the frontend in the future.
+`protos/` protobuf files used for generating json request/response objects.
 
 
 `scripts/` contains misc development scripts for building the project, etc.

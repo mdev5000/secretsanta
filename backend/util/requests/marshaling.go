@@ -8,6 +8,19 @@ import (
 	"io"
 )
 
+func JSON(c echo.Context, m proto.Message) error {
+	b, err := MarshalJSON(m)
+	if err != nil {
+		// @todo log error
+		return echo.NewHTTPError(500, "server error")
+	}
+	return c.Blob(200, "application/json", b)
+}
+
+func MarshalJSON(m proto.Message) ([]byte, error) {
+	return protojson.Marshal(m)
+}
+
 func UnmarshalJSON(c echo.Context, m proto.Message) error {
 	b, err := io.ReadAll(c.Request().Body)
 	if err != nil {

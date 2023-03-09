@@ -1,6 +1,7 @@
-<script>
+<script lang="ts">
     import Button, {Label} from '@smui/button';
-    import {get} from "$lib/rest/rest"
+    import {Login} from "$lib/requests/login"
+    import {getData, Result} from "$lib/rest/rest"
 
     let another = 0;
     let clicked = 0;
@@ -13,10 +14,15 @@
         another = 3 * clicked3;
     }
 
+    function logLogin(l: Login) {
+        console.log(l);
+    }
+
     async function fetchIt() {
         console.log("fetching")
-        const result = await get("example");
-        console.log("result", result);
+        const result = await getData<Login>(Login, "/example");
+        console.log(result);
+        logLogin(result.data);
     }
 
 </script>

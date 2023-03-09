@@ -9,6 +9,8 @@ import (
 	"github.com/mdev5000/secretsanta/internal/appcontext"
 	"github.com/mdev5000/secretsanta/internal/handlers"
 	mw "github.com/mdev5000/secretsanta/internal/middleware"
+	"github.com/mdev5000/secretsanta/internal/requests/gen"
+	"github.com/mdev5000/secretsanta/util/requests"
 	"net/http"
 	"sync"
 )
@@ -48,7 +50,6 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 	if config.Environment == Dev {
 		appGroup.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
-				fmt.Println("setting origin")
 				c.Response().Header().Add("Access-Control-Allow-Origin", "*")
 				return next(c)
 			}
@@ -68,7 +69,11 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 	})
 
 	appGroup.GET("/example", func(c echo.Context) error {
-		return c.String(200, "yay")
+		login := gen.Login{
+			Username: "username",
+			Password: "password",
+		}
+		return requests.JSON(c, &login)
 	})
 
 	apiGroup := e.Group("api")
