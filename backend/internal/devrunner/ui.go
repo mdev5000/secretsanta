@@ -16,6 +16,7 @@ type (
 		ShuttingDown   bool
 		BackendData    WatcherDetails
 		FrontendData   WatcherDetails
+		lastOutput     string
 		activeTabIndex int
 	}
 
@@ -47,10 +48,14 @@ func (m UIModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Output.Status {
 		case Data:
 			watcherDetails.Status = Running
-			watcherDetails.consoleOutput = msg.Output.Output
+			o := msg.Output.Output
+			watcherDetails.consoleOutput = o
+			m.lastOutput = o
 		case ErrorS:
+			o := msg.Output.Output
 			watcherDetails.Status = ErrorS
-			watcherDetails.consoleOutput = msg.Output.Output
+			watcherDetails.consoleOutput = o
+			m.lastOutput = o
 		case Running, Loading, Compiling:
 			watcherDetails.Status = msg.Output.Status
 		}
@@ -99,6 +104,7 @@ func min(a, b int) int {
 var (
 	statusStyles     = lg.NewStyle().Padding(1, 2)
 	tabContentStyles = lg.NewStyle().Padding(0, 2)
+	lastOutputStyles = lg.NewStyle().Padding(2, 0)
 )
 
 func (m UIModel) View() string {
@@ -128,5 +134,6 @@ func (m UIModel) statsPage() string {
 	return lg.JoinVertical(0,
 		"backend:  "+string(m.BackendData.Status),
 		"frontend: "+string(m.FrontendData.Status),
+		lastOutputStyles.Render(m.lastOutput),
 	)
 }

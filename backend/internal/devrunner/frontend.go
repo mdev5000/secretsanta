@@ -1,7 +1,6 @@
 package devrunner
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"golang.org/x/sync/errgroup"
@@ -27,12 +26,12 @@ func ensureKilled(cmd *exec.Cmd) error {
 }
 
 func WatchFrontend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Group, rootPath string) error {
-	in := bytes.NewBuffer(nil)
+	in := newThreadSafeBuffer()
+	errOut := newThreadSafeBuffer()
 
 	frontEndPath := filepath.Join(rootPath, "frontend")
 
 	cmd := exec.Command("npm", "run", "dev")
-	errOut := bytes.NewBuffer(nil)
 	cmd.Stderr = errOut
 	cmd.Stdout = in
 	cmd.Env = os.Environ()
@@ -46,6 +45,7 @@ func WatchFrontend(ctx context.Context, outputCh chan OutputData, eg *errgroup.G
 
 	eg.Go(func() error {
 		ticker := time.NewTicker(200 * time.Millisecond)
+		var output string
 		for {
 			select {
 			case <-ctx.Done():
@@ -65,20 +65,26 @@ func WatchFrontend(ctx context.Context, outputCh chan OutputData, eg *errgroup.G
 
 				errB, _ := io.ReadAll(errOut)
 
-				output := scrubOutput(string(outputB) + string(errB))
+				newOutput := string(outputB)
+				// > secretsanta is the first line of output so this indicates that the screen has been cleared.
+				// Haven't figured out a better way to detect this yet. :/
+				parts := strings.Split(strings.TrimSpace(newOutput), "> secretsanta")
+				if len(parts) == 1 {
+					output += parts[0]
+				} else {
+					output = "> secretsanta" + parts[len(parts)-1]
+				}
+
+				outputAll := output + string(errB)
 
 				outputCh <- OutputData{
 					Status: Data,
 					Source: Frontend,
-					Output: output,
+					Output: scrubOutput(outputAll),
 				}
 			}
 		}
 	})
 
 	return nil
-}
-
-func scrubOutput(s string) string {
-	return strings.ReplaceAll(s, "\t", "  ")
 }

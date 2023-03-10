@@ -1,5 +1,7 @@
 package devrunner
 
+import "strings"
+
 type (
 	Source string
 
@@ -25,3 +27,8 @@ const (
 )
 
 const ScreenClear = "\033c"
+
+// scrubOutput remove tab characters as they seem to cause issues with alignment with bubbletea. :(
+func scrubOutput(s string) string {
+	return strings.ReplaceAll(s, "\t", "  ")
+}

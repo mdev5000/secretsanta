@@ -1,7 +1,6 @@
 package devrunner
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/radovskyb/watcher"
@@ -14,7 +13,7 @@ import (
 	"time"
 )
 
-func runBackend(ctx context.Context, backendPath string, outputCh chan OutputData, updateCh chan struct{}, in *bytes.Buffer, errB io.Writer) error {
+func runBackend(ctx context.Context, backendPath string, outputCh chan OutputData, updateCh chan struct{}, in io.ReadWriter, errB io.Writer) error {
 	outputCh <- OutputData{Source: Backend, Status: Compiling}
 	output, exitCode := recompileBackend(backendPath)
 	if exitCode != 0 {
@@ -23,7 +22,7 @@ func runBackend(ctx context.Context, backendPath string, outputCh chan OutputDat
 		return nil
 	}
 	outputCh <- OutputData{Source: Backend, Status: Loading}
-	in.WriteString(ScreenClear)
+	in.Write([]byte(ScreenClear))
 	exe := createRunBackendCommand(backendPath, in, errB)
 	if err := exe.Start(); err != nil {
 		return fmt.Errorf("failed to start backend command: %w", err)
@@ -43,8 +42,8 @@ func runBackend(ctx context.Context, backendPath string, outputCh chan OutputDat
 }
 
 func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Group, rootPath string) error {
-	in := bytes.NewBuffer(nil)
-	errB := bytes.NewBuffer(nil)
+	in := newThreadSafeBuffer()
+	errB := newThreadSafeBuffer()
 	backendPath := filepath.Join(rootPath, "backend")
 
 	backendWatcher := watcher.New()
@@ -78,6 +77,7 @@ func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Gr
 	})
 
 	eg.Go(func() error {
+		var output string
 		ticker := time.NewTicker(200 * time.Millisecond)
 		defer ticker.Stop()
 		for {
@@ -85,19 +85,25 @@ func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Gr
 			case <-ctx.Done():
 				return nil
 			case <-ticker.C:
-				output, _ := io.ReadAll(in)
+				outputB, _ := io.ReadAll(in)
 				errOutput, _ := io.ReadAll(errB)
 				if len(errOutput) != 0 {
 					return fmt.Errorf("error while running backend process:\n\n%s", string(errOutput))
 				}
-				if len(output) == 0 {
+				if len(outputB) == 0 {
 					continue
+				}
+				parts := strings.Split(string(outputB), ScreenClear)
+				if len(parts) == 1 {
+					output += parts[0]
+				} else {
+					output = parts[len(parts)-1]
 				}
 				outputCh <- OutputData{
 					Status: Data,
 					Source: Backend,
 					Err:    nil,
-					Output: strings.Replace(string(output), ScreenClear, "", -1),
+					Output: scrubOutput(output),
 				}
 			}
 		}
