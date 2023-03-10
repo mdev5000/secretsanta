@@ -28,4 +28,7 @@ build: build.frontend
 build.frontend:
 	$(MAKE) -C ./frontend build
 
+dev.run: FORCE
+	$(MAKE) -C ./backend dev.run
+
 FORCE:

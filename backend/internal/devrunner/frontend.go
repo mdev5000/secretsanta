@@ -23,6 +23,9 @@ func WatchFrontend(ctx context.Context, outputCh chan OutputData, eg *errgroup.G
 	cmd.Stdout = in
 	cmd.Env = os.Environ()
 	cmd.Dir = frontEndPath
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("%w: failed to start command with output:\n%s", err, errOut.String())
+	}
 
 	eg.Go(func() error {
 		ticker := time.NewTicker(200 * time.Millisecond)
@@ -31,31 +34,24 @@ func WatchFrontend(ctx context.Context, outputCh chan OutputData, eg *errgroup.G
 			case <-ctx.Done():
 				return nil
 			case <-ticker.C:
+				if cmd.ProcessState != nil {
+					if cmd.ProcessState.ExitCode() != -1 {
+						b, _ := cmd.CombinedOutput()
+						return fmt.Errorf("frontend crashed unexpectedly:\n%s", string(b))
+					}
+				}
+
 				output, _ := io.ReadAll(in)
 				if len(output) == 0 {
 					continue
 				}
-				fmt.Println("output")
 				outputCh <- OutputData{
+					Status: Data,
 					Source: Frontend,
 					Output: string(output),
 				}
 			}
 		}
-	})
-
-	eg.Go(func() error {
-		if err := cmd.Start(); err != nil {
-			return err
-		}
-
-		if err := cmd.Wait(); err != nil {
-			if ctx.Err() != nil {
-				return nil
-			}
-			return fmt.Errorf("%w: failed with output:\n%s", err, errOut.String())
-		}
-		return nil
 	})
 
 	return nil

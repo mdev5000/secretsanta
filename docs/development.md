@@ -22,20 +22,10 @@ make deps.install
 
 ## Running development environment
 
-Process will be improved soon.
-
 ```bash
 docker-compose up -d
-
-# in one tab
-cd backend
-ENV=development go run ./cmd/secretsanta/main.go
-
-# in another tab
-cd frontend
-npm run dev
+make dev.run
 ```
-
 ---
 
 ## Testing

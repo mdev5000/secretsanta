@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/mdev5000/secretsanta/internal/devrunner"
 	"golang.org/x/sync/errgroup"
 	"os"
-	"os/signal"
 	"path/filepath"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mdev5000/secretsanta/internal/devrunner"
 )
 
 func main() {
@@ -16,23 +17,25 @@ func main() {
 	}
 }
 
-func run() error {
-	cancelled := false
-	mainCtx, cancel := context.WithCancel(context.Background())
+func ignoreIt(i ...interface{}) {
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			if cancelled {
-				os.Exit(1)
-			}
-			// sig is a ^C, handle it
-			fmt.Println("\nShutting down...")
-			cancel()
-			cancelled = true
-		}
-	}()
+}
+
+func run() error {
+	mainCtx, cancel := context.WithCancel(context.Background())
+	ignoreIt(cancel)
+
+	uiModel := devrunner.UIModel{
+		Shutdown:     cancel,
+		ShuttingDown: false,
+		BackendData: devrunner.WatcherDetails{
+			Status: devrunner.Loading,
+		},
+		FrontendData: devrunner.WatcherDetails{
+			Status: devrunner.Loading,
+		},
+	}
+	prog := tea.NewProgram(uiModel)
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -53,12 +56,7 @@ func run() error {
 			case <-ctx.Done():
 				return nil
 			case msg := <-outputCh:
-				if msg.Err != nil {
-					fmt.Println("Error: ", msg.Err.Error())
-					continue
-				}
-				fmt.Println("--", msg.Source, "---------------------------------------------")
-				fmt.Println(msg.Output)
+				prog.Send(devrunner.MessageWatcherUpdate{Output: msg})
 			}
 		}
 	})
@@ -71,10 +69,27 @@ func run() error {
 		return err
 	}
 
-	if err := eg.Wait(); err != nil {
-		if err != context.Canceled {
-			return err
+	errCh := make(chan error)
+	go func() {
+		var err error
+		if err = eg.Wait(); err != nil {
+			if err == context.Canceled {
+				err = nil
+			}
 		}
+		prog.Send(devrunner.Terminate{})
+		errCh <- err
+	}()
+
+	fmt.Println(devrunner.ScreenClear)
+	_, err = prog.Run()
+	if err != nil {
+		return err
+	}
+	fmt.Println(devrunner.ScreenClear)
+
+	if err := <-errCh; err != nil {
+		return err
 	}
 
 	return nil

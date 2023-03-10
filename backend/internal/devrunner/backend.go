@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -27,10 +28,12 @@ func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Gr
 
 	eg.Go(func() error {
 		for {
+			outputCh <- OutputData{Source: Backend, Status: Compiling}
 			output, err := recompileBackend(backendPath)
 			if err != nil {
 				fmt.Errorf("failed to recompile backend: %w:\n%s", err, string(output))
 			}
+			outputCh <- OutputData{Source: Backend, Status: Loading}
 			in.WriteString(ScreenClear)
 			exe := createRunBackendCommand(backendPath, in, errB)
 			if err := exe.Start(); err != nil {
@@ -44,7 +47,6 @@ func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Gr
 				return nil
 			case <-updateCh:
 			}
-			fmt.Println("restarting backend process...")
 			if err := exe.Process.Kill(); err != nil {
 				return fmt.Errorf("failed to restart backend process: %w", err)
 			}
@@ -58,8 +60,7 @@ func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Gr
 			case <-ctx.Done():
 				backendWatcher.Close()
 				return ctx.Err()
-			case e := <-backendWatcher.Event:
-				fmt.Println(e.Path)
+			case <-backendWatcher.Event:
 				updateCh <- struct{}{}
 			case err := <-backendWatcher.Error:
 				return err
@@ -84,9 +85,10 @@ func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Gr
 					continue
 				}
 				outputCh <- OutputData{
+					Status: Data,
 					Source: Backend,
 					Err:    nil,
-					Output: string(output),
+					Output: strings.Replace(string(output), ScreenClear, "", -1),
 				}
 			}
 		}
