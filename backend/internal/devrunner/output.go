@@ -17,6 +17,7 @@ const (
 	Backend  Source = "backend"
 	Frontend Source = "frontend"
 
+	ErrorS    Status = "error"
 	Compiling Status = "compiling"
 	Loading   Status = "loading"
 	Running   Status = "running"

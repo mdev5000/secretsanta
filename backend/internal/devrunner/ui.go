@@ -48,6 +48,9 @@ func (m UIModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case Data:
 			watcherDetails.Status = Running
 			watcherDetails.consoleOutput = msg.Output.Output
+		case ErrorS:
+			watcherDetails.Status = ErrorS
+			watcherDetails.consoleOutput = msg.Output.Output
 		case Running, Loading, Compiling:
 			watcherDetails.Status = msg.Output.Status
 		}

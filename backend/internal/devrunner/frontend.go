@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
+	"unicode"
 )
 
 func ensureKilled(cmd *exec.Cmd) error {
@@ -57,14 +58,28 @@ func WatchFrontend(ctx context.Context, outputCh chan OutputData, eg *errgroup.G
 					}
 				}
 
-				output, _ := io.ReadAll(in)
-				if len(output) == 0 {
+				outputB, _ := io.ReadAll(in)
+				if len(outputB) == 0 {
 					continue
 				}
+
+				errB, _ := io.ReadAll(errOut)
+				//output = strings.Replace(output, ScreenClear, "", -1)
+				//re := regexp.MustCompile("[^a-zA-Z. \n]+")
+				//output = re.ReplaceAllString(strings.TrimSpace(output), "")
+
+				chars := []rune(string(outputB) + string(errB))
+				outChars := make([]rune, 0, len(chars))
+				for _, char := range chars {
+					if unicode.IsPrint(char) || char == '\n' {
+						outChars = append(outChars, char)
+					}
+				}
+
 				outputCh <- OutputData{
 					Status: Data,
 					Source: Frontend,
-					Output: string(output),
+					Output: string(outChars),
 				}
 			}
 		}

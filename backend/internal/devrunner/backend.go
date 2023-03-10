@@ -14,6 +14,34 @@ import (
 	"time"
 )
 
+func runBackend(ctx context.Context, backendPath string, outputCh chan OutputData, updateCh chan struct{}, in *bytes.Buffer, errB io.Writer) error {
+	outputCh <- OutputData{Source: Backend, Status: Compiling}
+	output, exitCode := recompileBackend(backendPath)
+	if exitCode != 0 {
+		outputCh <- OutputData{Source: Backend, Status: ErrorS, Output: string(output)}
+		<-updateCh
+		return nil
+	}
+	outputCh <- OutputData{Source: Backend, Status: Loading}
+	in.WriteString(ScreenClear)
+	exe := createRunBackendCommand(backendPath, in, errB)
+	if err := exe.Start(); err != nil {
+		return fmt.Errorf("failed to start backend command: %w", err)
+	}
+	select {
+	case <-ctx.Done():
+		if err := exe.Process.Kill(); err != nil {
+			return fmt.Errorf("failed to restart backend process: %w", err)
+		}
+		return ctx.Err()
+	case <-updateCh:
+	}
+	if err := exe.Process.Kill(); err != nil {
+		return fmt.Errorf("failed to restart backend process: %w", err)
+	}
+	return nil
+}
+
 func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Group, rootPath string) error {
 	in := bytes.NewBuffer(nil)
 	errB := bytes.NewBuffer(nil)
@@ -28,27 +56,8 @@ func WatchBackend(ctx context.Context, outputCh chan OutputData, eg *errgroup.Gr
 
 	eg.Go(func() error {
 		for {
-			outputCh <- OutputData{Source: Backend, Status: Compiling}
-			output, err := recompileBackend(backendPath)
-			if err != nil {
-				fmt.Errorf("failed to recompile backend: %w:\n%s", err, string(output))
-			}
-			outputCh <- OutputData{Source: Backend, Status: Loading}
-			in.WriteString(ScreenClear)
-			exe := createRunBackendCommand(backendPath, in, errB)
-			if err := exe.Start(); err != nil {
-				return fmt.Errorf("failed to start backend command: %w", err)
-			}
-			select {
-			case <-ctx.Done():
-				if err := exe.Process.Kill(); err != nil {
-					return fmt.Errorf("failed to restart backend process: %w", err)
-				}
-				return nil
-			case <-updateCh:
-			}
-			if err := exe.Process.Kill(); err != nil {
-				return fmt.Errorf("failed to restart backend process: %w", err)
+			if err := runBackend(ctx, backendPath, outputCh, updateCh, in, errB); err != nil {
+				return err
 			}
 		}
 	})
@@ -112,9 +121,10 @@ func createRunBackendCommand(backendPath string, in io.Writer, errB io.Writer) *
 	return cmd
 }
 
-func recompileBackend(backendPath string) ([]byte, error) {
+func recompileBackend(backendPath string) ([]byte, int) {
 	cmd := exec.Command("make", "build")
 	cmd.Env = os.Environ()
 	cmd.Dir = backendPath
-	return cmd.CombinedOutput()
+	output, _ := cmd.CombinedOutput()
+	return output, cmd.ProcessState.ExitCode()
 }
