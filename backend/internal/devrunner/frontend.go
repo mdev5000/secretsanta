@@ -9,9 +9,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
-	"unicode"
 )
 
 func ensureKilled(cmd *exec.Cmd) error {
@@ -64,26 +64,21 @@ func WatchFrontend(ctx context.Context, outputCh chan OutputData, eg *errgroup.G
 				}
 
 				errB, _ := io.ReadAll(errOut)
-				//output = strings.Replace(output, ScreenClear, "", -1)
-				//re := regexp.MustCompile("[^a-zA-Z. \n]+")
-				//output = re.ReplaceAllString(strings.TrimSpace(output), "")
 
-				chars := []rune(string(outputB) + string(errB))
-				outChars := make([]rune, 0, len(chars))
-				for _, char := range chars {
-					if unicode.IsPrint(char) || char == '\n' {
-						outChars = append(outChars, char)
-					}
-				}
+				output := scrubOutput(string(outputB) + string(errB))
 
 				outputCh <- OutputData{
 					Status: Data,
 					Source: Frontend,
-					Output: string(outChars),
+					Output: output,
 				}
 			}
 		}
 	})
 
 	return nil
+}
+
+func scrubOutput(s string) string {
+	return strings.ReplaceAll(s, "\t", "  ")
 }
