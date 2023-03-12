@@ -13,10 +13,12 @@ make build
 # or to fully rebuild
 make build.refresh
 
-# Example run the output binary
+
+# run the binary
+export MONGO_URI="mongo://user:password@uri-to-mongo"
 ./backend/_build/secretsanta
 ```
 
 ## Development
 
-See [Development](./docs/development.md) docs for details.
+See [Development](./docs/development.md) docs for details on setup, running, testing, etc.

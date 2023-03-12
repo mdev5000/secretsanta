@@ -59,7 +59,6 @@ func (s *server) setupServer() {
 	s.exampleAPIRoute(apiGroup)
 
 	appGroup := s.e.Group("")
-
 	appGroup.Use(mw.IsSetup(s.appContext.SetupService))
 	s.appRoutes(appGroup)
 }
