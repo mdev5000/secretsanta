@@ -32,10 +32,8 @@ make dev.run
 
 ### Run all tests
 
-In progress...
-
 ```bash
-./scripts/run-test-ui.sh
+make test.all
 ```
 
 ### UI tests

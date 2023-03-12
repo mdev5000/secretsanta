@@ -4,6 +4,9 @@ build: FORCE
 	go build -o _build/secretsanta ./cmd/secretsanta/main.go
 
 test: FORCE
+	go test -count=1 ./...
+
+test.race: FORCE
 	go test -count=1 --race ./...
 
 dev.run: FORCE

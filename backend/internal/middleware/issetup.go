@@ -9,7 +9,14 @@ import (
 func IsSetup(svc *setup.Service) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			isSetupPath := c.Request().URL.Path == "/app/setup"
+			path := c.Request().URL.Path
+
+			// @todo eventually remove this
+			if path == "/example" || path == "/app/example" {
+				return next(c)
+			}
+
+			isSetupPath := path == "/app/setup"
 			isSetup, err := svc.IsSetup(c.Request().Context())
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, err)

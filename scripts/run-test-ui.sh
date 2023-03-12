@@ -17,8 +17,10 @@ scriptPath="$(pwd)/scripts"
 seccompFile="${scriptPath}/seccomp_profile.json"
 
 docker run -it -v "${testPath}:/tests" \
+  --network="docker_ui-test-network" \
   --rm --ipc=host \
   --user "$UID" --security-opt seccomp="${seccompFile}" \
-  mcr.microsoft.com/playwright:v1.29.1-focal /tests/run-docker.sh
+  mcr.microsoft.com/playwright:v1.29.1-focal \
+  /tests/run-docker.sh
 
 make uitest.down

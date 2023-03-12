@@ -15,4 +15,8 @@ assets.replacePaths: FORCE
 	@find ./build -type f -exec sed -i 's|http://localhost:3000/replaceme/assets|/assets|g' {} \;
 	@echo "Asset paths fixed."
 
+test: FORCE
+	# run unit tests
+	npx vitest --run
+
 FORCE:
