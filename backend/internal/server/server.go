@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"github.com/mdev5000/flog/attr"
-	"github.com/mdev5000/secretsanta/internal/util/appctx"
 	"github.com/mdev5000/secretsanta/internal/util/log"
 	"net/http"
 	"sync"
@@ -68,15 +67,14 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 		return c.Redirect(http.StatusTemporaryRedirect, "/app")
 	})
 
-	appGroup.GET("/example", func(c echo.Context) error {
-		ctx = appctx.Init(c)
+	appGroup.GET("/example", mw.Wrap(func(ctx context.Context, c echo.Context) error {
 		log.Ctx(ctx).Info("example log", attr.String("first", "value"))
 		login := gen.Login{
 			Username: "username",
 			Password: "password",
 		}
 		return requests.JSON(c, &login)
-	})
+	}))
 
 	apiGroup := e.Group("api")
 
