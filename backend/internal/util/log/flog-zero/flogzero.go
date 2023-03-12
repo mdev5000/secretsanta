@@ -91,6 +91,8 @@ func processAttr(e *zerolog.Event, a attr.Attr) {
 		e.Err(v)
 	case attr.AnyAttr:
 		e.Interface(a.Key, v.A)
+	case nil:
+		e.Str(a.Key, "nil")
 	default:
 		panic(fmt.Errorf("unsupported value %+v", v))
 	}

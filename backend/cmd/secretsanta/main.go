@@ -42,13 +42,20 @@ func run() error {
 
 	log.Ctx(ctx).Info("started with config", attr.Interface("config", cfg))
 
+	log.Ctx(ctx).Info("connecting to mongo")
 	mongoURI := cfg.MongoURI
 	client, err := mongo.Create(mongoURI)
 	if err != nil {
+		log.Ctx(ctx).Error("failed to start mongo", attr.Err(err))
 		return fmt.Errorf("failed to start mongo client: %w", err)
 	}
 	if err := client.Connect(ctx); err != nil {
+		log.Ctx(ctx).Error("failed to connect to mongo", attr.Err(err))
 		return fmt.Errorf("failed to connect to mongo: %w", err)
+	}
+	if err := client.Ping(ctx, nil); err != nil {
+		log.Ctx(ctx).Error("failed to ping mongo", attr.Err(err))
+		// @todo make this a read endpoint thing at some point.
 	}
 	db := client.Database("ssdev")
 

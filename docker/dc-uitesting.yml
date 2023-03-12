@@ -4,7 +4,7 @@ services:
 
   secretsanta:
     build:
-      context: .
+      context: ../
       dockerfile: ./docker/Dockerfile_secretsanta
     networks:
       - ui-test-network
@@ -12,6 +12,10 @@ services:
       - "3000:3000"
     depends_on:
       - mongo
+    expose:
+      - "3000"
+    environment:
+      MONGO_URI: mongodb://root:rootPW@mongo
 
   mongo:
     image: mongo:4.2

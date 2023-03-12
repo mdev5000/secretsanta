@@ -3,6 +3,7 @@ package devrunner
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	lg "github.com/charmbracelet/lipgloss"
+	csize "github.com/nathan-fiscaletti/consolesize-go"
 )
 
 type (
@@ -108,6 +109,8 @@ var (
 )
 
 func (m UIModel) View() string {
+	consoleWidth, _ := csize.GetConsoleSize()
+
 	if m.ShuttingDown {
 		return lg.NewStyle().Padding(2).Render("shutting down...")
 	}
@@ -126,7 +129,7 @@ func (m UIModel) View() string {
 	return lg.JoinVertical(0,
 		statusStyles.Render("Status message"),
 		tabs,
-		tabContentStyles.Render(tab),
+		tabContentStyles.Width(consoleWidth).Render(tab),
 	)
 }
 

@@ -2,6 +2,9 @@
 sp:
 	npm run smui-prepare
 
+install :FORCE
+	npm install
+
 build: FORCE
 	npm run build
 	$(MAKE) assets.replacePaths

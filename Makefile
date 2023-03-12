@@ -12,6 +12,8 @@ schemas.gen.backend:
 schemas.gen.frontend:
 	npx protoc --ts_out frontend/src/lib/requests --proto_path protos protos/*
 
+build.ci: deps.install frontend.install build.refresh
+
 # Fully rebuild the project.
 build.refresh: schemas.gen build
 
@@ -25,10 +27,22 @@ build: build.frontend
 	@mv ./frontend/build/ "$(SPA_EMBED_PATH)/spa"
 	$(MAKE) -C ./backend build
 
+frontend.install:
+	$(MAKE) -C ./frontend install
+
 build.frontend:
 	$(MAKE) -C ./frontend build
 
 dev.run: FORCE
 	$(MAKE) -C ./backend dev.run
+
+uitest.build:
+	docker-compose -f ./docker/dc-uitesting.yml build
+
+uitest.up:
+	docker-compose -f ./docker/dc-uitesting.yml up -d
+
+uitest.down:
+	docker-compose -f ./docker/dc-uitesting.yml down
 
 FORCE:
