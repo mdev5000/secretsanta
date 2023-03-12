@@ -4,6 +4,12 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/mdev5000/flog/attr"
+	"github.com/mdev5000/secretsanta/internal/util/appctx"
+	"github.com/mdev5000/secretsanta/internal/util/log"
+	"net/http"
+	"sync"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/mdev5000/secretsanta/internal/appcontext"
@@ -11,8 +17,6 @@ import (
 	mw "github.com/mdev5000/secretsanta/internal/middleware"
 	"github.com/mdev5000/secretsanta/internal/requests/gen"
 	"github.com/mdev5000/secretsanta/internal/util/requests"
-	"net/http"
-	"sync"
 )
 
 type Environment string
@@ -65,6 +69,8 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 	})
 
 	appGroup.GET("/example", func(c echo.Context) error {
+		ctx = appctx.Init(c)
+		log.Ctx(ctx).Info("example log", attr.String("first", "value"))
 		login := gen.Login{
 			Username: "username",
 			Password: "password",

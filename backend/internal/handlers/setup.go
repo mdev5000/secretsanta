@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/mdev5000/secretsanta/internal/setup"
 	"github.com/mdev5000/secretsanta/internal/user"
+	"github.com/mdev5000/secretsanta/internal/util/appctx"
+	"github.com/mdev5000/secretsanta/internal/util/log"
 	"net/http"
 )
 
@@ -25,7 +26,7 @@ func NewSetupHandler(svc SetupService) *SetupHandler {
 }
 
 func (h *SetupHandler) FinalizeSetup(c echo.Context) error {
-	ctx := c.Request().Context()
+	ctx := appctx.Init(c)
 
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
@@ -35,7 +36,7 @@ func (h *SetupHandler) FinalizeSetup(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "app is already setup")
 	}
 
-	fmt.Println("running setup")
+	log.Ctx(ctx).Info("running setup")
 
 	err = h.svc.Setup(ctx, setup.Data{
 		DefaultAdmin: &user.User{

@@ -11,9 +11,11 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/labstack/echo-contrib v0.14.1
 	github.com/labstack/echo/v4 v4.10.2
+	github.com/mdev5000/flog v0.0.0-20230312011309-57f51a709620
 	github.com/nathan-fiscaletti/consolesize-go v0.0.0-20220204101620-317176b6684d
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/radovskyb/watcher v1.0.7
+	github.com/rs/zerolog v1.29.0
 	github.com/stretchr/testify v1.8.1
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/crypto v0.6.0
