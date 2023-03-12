@@ -25,6 +25,10 @@ const (
 	Prod Environment = "prod"
 )
 
+func (e Environment) IsDev() bool {
+	return e == Dev || e == "development"
+}
+
 type Config struct {
 	Environment Environment
 }
@@ -40,7 +44,7 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 
 	if !isSetup {
 		setupHandler := handlers.NewSetupHandler(ac.SetupService)
-		e.POST("api/setup", setupHandler.FinalizeSetup)
+		e.POST("api/setup", mw.Wrap(ctx, setupHandler.FinalizeSetup))
 	}
 
 	// Set up the assets file server.
@@ -51,7 +55,7 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 	appGroup := e.Group("")
 
 	// If environment is development, setup development middlewares
-	if config.Environment == Dev {
+	if config.Environment.IsDev() {
 		appGroup.Use(mw.Dev())
 	}
 
@@ -67,7 +71,7 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 		return c.Redirect(http.StatusTemporaryRedirect, "/app")
 	})
 
-	appGroup.GET("/example", mw.Wrap(func(ctx context.Context, c echo.Context) error {
+	appGroup.GET("/example", mw.Wrap(ctx, func(ctx context.Context, c echo.Context) error {
 		log.Ctx(ctx).Info("example log", attr.String("first", "value"))
 		login := gen.Login{
 			Username: "username",

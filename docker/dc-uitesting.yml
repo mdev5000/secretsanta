@@ -2,6 +2,17 @@ version: '3.1'
 
 services:
 
+  secretsanta:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile_secretsanta
+    networks:
+      - ui-test-network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+
   mongo:
     image: mongo:4.2
     restart: always

@@ -7,6 +7,12 @@ if ! docker-compose -f ./docker/dc-uitesting.yml up -d; then
 fi
 
 testPath="$(pwd)/tests/ui"
-#docker run --network=docker_ui-test-network -v "${testPath}:/tests" mcr.microsoft.com/playwright:v1.31.0-focal /tests/run-docker.sh
-docker run --network=docker_ui-test-network -v "${testPath}:/tests" mcr.microsoft.com/playwright:v1.29.1-focal /tests/run-docker.sh
+scriptPath="$(pwd)/scripts"
+seccompFile="${scriptPath}/seccomp_profile.json"
+
+docker run -it -v "${testPath}:/tests" \
+  --rm --ipc=host \
+  --user "$UID" --security-opt seccomp="${seccompFile}" \
+  mcr.microsoft.com/playwright:v1.29.1-focal /tests/run-docker.sh
+
 docker-compose -f ./docker/dc-uitesting.yml down

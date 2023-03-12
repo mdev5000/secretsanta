@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mdev5000/secretsanta/internal/setup"
 	"github.com/mdev5000/secretsanta/internal/user"
-	"github.com/mdev5000/secretsanta/internal/util/appctx"
 	"github.com/mdev5000/secretsanta/internal/util/log"
 	"net/http"
 )
@@ -25,9 +24,7 @@ func NewSetupHandler(svc SetupService) *SetupHandler {
 	}
 }
 
-func (h *SetupHandler) FinalizeSetup(c echo.Context) error {
-	ctx := appctx.Init(c)
-
+func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) error {
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
 		return err
