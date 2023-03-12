@@ -23,7 +23,7 @@ make deps.install
 ## Running development environment
 
 ```bash
-docker-compose up -d
+make dev.docker.up
 make dev.run
 ```
 ---

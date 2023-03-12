@@ -4,17 +4,17 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"github.com/mdev5000/flog/attr"
-	"github.com/mdev5000/secretsanta/internal/util/log"
 	"net/http"
 	"sync"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/mdev5000/flog/attr"
 	"github.com/mdev5000/secretsanta/internal/appcontext"
 	"github.com/mdev5000/secretsanta/internal/handlers"
 	mw "github.com/mdev5000/secretsanta/internal/middleware"
 	"github.com/mdev5000/secretsanta/internal/requests/gen"
+	"github.com/mdev5000/secretsanta/internal/util/log"
 	"github.com/mdev5000/secretsanta/internal/util/requests"
 )
 
@@ -31,47 +31,70 @@ func (e Environment) IsDev() bool {
 
 type Config struct {
 	Environment Environment
+	SetupCh     chan struct{}
 }
 
 var readIndexFile = sync.Once{}
 var indexFile []byte
 
-func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *echo.Echo {
+type commonHandlers struct {
+	setup *handlers.SetupHandler
+}
 
-	e := echo.New()
+type server struct {
+	appCtx     context.Context
+	appContext *appcontext.AppContext
+	config     *Config
+	e          *echo.Echo
+	handlers   commonHandlers
+}
 
-	isSetup, _ := ac.SetupService.IsSetup(ctx)
+func (s *server) wrap(h mw.AppHandler) echo.HandlerFunc {
+	return mw.Wrap(s.appCtx, h)
+}
 
-	if !isSetup {
-		setupHandler := handlers.NewSetupHandler(ac.SetupService)
-		e.POST("api/setup", mw.Wrap(ctx, setupHandler.FinalizeSetup))
-	}
+func (s *server) setupServer() {
+	apiGroup := s.e.Group("/api")
+	apiGroup.POST("/setup", s.wrap(s.handlers.setup.FinalizeSetup))
+	s.exampleAPIRoute(apiGroup)
 
+	appGroup := s.e.Group("")
+
+	appGroup.Use(mw.IsSetup(s.appContext.SetupService))
+	s.appRoutes(appGroup)
+}
+
+func (s *server) appRoutes(appGroup *echo.Group) {
 	// Set up the assets file server.
-	contentHandler := echo.WrapHandler(http.FileServer(http.FS(ac.SPAContent)))
+	contentHandler := echo.WrapHandler(http.FileServer(http.FS(s.appContext.SPAContent)))
 	contentRewrite := middleware.Rewrite(map[string]string{"/*": "/embedded/$1"})
-	e.GET("assets/*", contentHandler, contentRewrite)
 
-	appGroup := e.Group("")
-
-	// If environment is development, setup development middlewares
-	if config.Environment.IsDev() {
-		appGroup.Use(mw.Dev())
-	}
-
-	if !isSetup {
-		appGroup.Use(mw.IsSetup(ac.SetupService))
-	}
-
-	homePage := mkHomePageHandler(ac.SPAContent)
+	s.e.GET("assets/*", contentHandler, contentRewrite)
+	homePage := mkHomePageHandler(s.appContext.SPAContent)
 	appGroup.GET("app", homePage)
 	appGroup.GET("app/*", homePage)
 
 	appGroup.GET("/", func(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/app")
 	})
+}
 
-	appGroup.GET("/example", mw.Wrap(ctx, func(ctx context.Context, c echo.Context) error {
+func (s *server) apiRoutes(apiGroup *echo.Group) {
+	// If environment is development, setup development middlewares
+	if s.config.Environment.IsDev() {
+		apiGroup.Use(mw.ApiDev())
+	}
+
+	apiGroup.POST("/setup/status", s.wrap(s.handlers.setup.Status))
+
+	s.exampleAPIRoute(apiGroup)
+
+	userHandler := handlers.NewUserHandler(s.appContext.UserService)
+	apiGroup.POST("/login", userHandler.Login)
+}
+
+func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
+	apiGroup.GET("/example", s.wrap(func(ctx context.Context, c echo.Context) error {
 		log.Ctx(ctx).Info("example log", attr.String("first", "value"))
 		login := gen.Login{
 			Username: "username",
@@ -79,13 +102,35 @@ func Server(ctx context.Context, ac *appcontext.AppContext, config *Config) *ech
 		}
 		return requests.JSON(c, &login)
 	}))
+}
 
-	apiGroup := e.Group("api")
+func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *echo.Echo {
+	s := server{
+		appCtx:     appCtx,
+		appContext: ac,
+		config:     config,
+		e:          echo.New(),
+		handlers: commonHandlers{
+			setup: handlers.NewSetupHandler(ac.SetupService, appCtx, config.SetupCh),
+		},
+	}
 
-	userHandler := handlers.NewUserHandler(ac.UserService)
-	apiGroup.POST("login", userHandler.Login)
+	isSetup, _ := ac.SetupService.IsSetup(appCtx)
 
-	return e
+	if !isSetup {
+		log.Ctx(appCtx).Info("app is not setup, starting in setup mode")
+		// Server starts with a different set of routes when setting up, then panics and restarts.
+		s.setupServer()
+		return s.e
+	}
+
+	apiGroup := s.e.Group("/api")
+	s.apiRoutes(apiGroup)
+
+	appGroup := s.e.Group("")
+	s.appRoutes(appGroup)
+
+	return s.e
 }
 
 func mkHomePageHandler(spaContent embed.FS) echo.HandlerFunc {

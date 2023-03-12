@@ -12,7 +12,7 @@ func IsSetup(svc *setup.Service) echo.MiddlewareFunc {
 			path := c.Request().URL.Path
 
 			// @todo eventually remove this
-			if path == "/example" || path == "/app/example" {
+			if path == "/api/example" || path == "/app/example" {
 				return next(c)
 			}
 

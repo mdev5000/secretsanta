@@ -4,8 +4,10 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"net/http"
 	"os"
 
+	"github.com/labstack/echo/v4"
 	"github.com/mdev5000/flog/attr"
 	"github.com/mdev5000/secretsanta/internal/appcontext"
 	"github.com/mdev5000/secretsanta/internal/config"
@@ -66,9 +68,43 @@ func run() error {
 
 	ac.SetupService = setup.NewSetupService(ac.UserService)
 
+	return runServer(ctx, ac, cfg)
+}
+
+func runServer(ctx context.Context, ac appcontext.AppContext, cfg config.Config) (err error) {
+	setupCh := make(chan struct{})
+	defer close(setupCh)
+
 	serverCfg := server.Config{
 		Environment: server.Environment(cfg.Env),
+		SetupCh:     setupCh,
+	}
+	address := ":3000"
+
+	var e *echo.Echo
+	go func() {
+		<-setupCh
+		log.Ctx(ctx).Info("setup has been completed, restarting server")
+		if err := e.Shutdown(ctx); err != nil {
+			log.Ctx(ctx).Error("error occurred at shutdown during setup restart", attr.Err(err))
+		}
+	}()
+
+	appIsSetup, err := ac.SetupService.IsSetup(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to determine if app was setup: %w", err)
 	}
 
-	return server.Server(ctx, &ac, &serverCfg).Start(":3000")
+	e = server.Server(ctx, &ac, &serverCfg)
+	if err := e.Start(address); err != nil && err != http.ErrServerClosed {
+		return err
+	}
+
+	if !appIsSetup {
+		log.Ctx(ctx).Info("app started in non-setup state, so restarting server")
+		e = server.Server(ctx, &ac, &serverCfg)
+		return e.Start(address)
+	}
+
+	return nil
 }

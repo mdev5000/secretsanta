@@ -23,7 +23,7 @@
 
     async function fetchIt() {
         console.log("fetching")
-        const result = await getData<Login>(Login, "/example");
+        const result = await getData<Login>(Login, "/api/example");
         console.log(result);
         logLogin(result.data);
     }
