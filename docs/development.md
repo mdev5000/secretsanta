@@ -59,13 +59,24 @@ cd backend
 # run all tests
 make test
 
+# run all tests and check for race conditions.
+make test.race
+
 # don't run db tests
 NODB=1 make test
 ```
 
 ### Frontend
 
-Will add later.
+```bash
+cd frontend
+
+# Run all tests
+make test
+
+# Run test watcher
+npm run test
+```
 
 ---
 

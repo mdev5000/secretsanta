@@ -10,7 +10,7 @@
 		"smui-theme-dark": "smui-theme compile static/smui-dark.css -i src/theme/dark",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test:unit": "vitest",
+		"test": "vitest",
 		"lint": "eslint ."
 	},
 	"devDependencies": {
