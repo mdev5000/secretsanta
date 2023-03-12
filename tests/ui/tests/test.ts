@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-test('about page has expected h1', async ({ page }) => {
-	await page.goto('/app/about');
-	expect(await page.textContent('h1')).toBe('About this app');
+test('example test', async ({ page }) => {
+	await page.goto('/app/example');
+	// expect(await page.textContent('//*[@data-testid="fetcher"]')).toBe("Fetch");
+	await page.click('data-testid=fetcher');
+	let username = await page.textContent('data-testid=username');
+	expect(username).toBe('Username: username');
 });

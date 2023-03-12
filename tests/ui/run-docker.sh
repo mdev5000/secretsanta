@@ -1,4 +1,4 @@
 #!/bin/bash
 cd /tests
 npm install
-npm run test
+REPORT_PATH=playwright-report-ci npm run test
