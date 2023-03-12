@@ -42,6 +42,12 @@ build.frontend:
 
 # dev environment ------------------------------------------------------------------------------------------------------
 
+dev.docker.up: FORCE
+	docker-compose up -d
+
+dev.docker.down: FORCE
+	docker-compose down
+
 dev.run: FORCE
 	$(MAKE) -C ./backend dev.run
 
@@ -49,6 +55,8 @@ dev.run: FORCE
 
 # test everything locally
 test.all:
+	# Make sure we are not running development docker
+	$(MAKE) dev.docker.down
 	@echo "Test backend..."
 	$(MAKE) -C ./backend test.race
 	@echo "Test backend (done)."
