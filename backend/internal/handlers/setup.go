@@ -96,6 +96,10 @@ func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
 }
 
 func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) error {
+	// Only one setup request can occur at one time.
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
 		return err
