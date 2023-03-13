@@ -3,7 +3,11 @@ package server
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
+	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
+	"github.com/mdev5000/secretsanta/internal/util/apperror"
+	"github.com/mdev5000/secretsanta/internal/util/appjson"
 	"net/http"
 	"sync"
 
@@ -13,9 +17,7 @@ import (
 	"github.com/mdev5000/secretsanta/internal/appcontext"
 	"github.com/mdev5000/secretsanta/internal/handlers"
 	mw "github.com/mdev5000/secretsanta/internal/middleware"
-	"github.com/mdev5000/secretsanta/internal/requests/gen"
 	"github.com/mdev5000/secretsanta/internal/util/log"
-	"github.com/mdev5000/secretsanta/internal/util/requests"
 )
 
 type Environment string
@@ -50,11 +52,13 @@ type server struct {
 }
 
 func (s *server) wrap(h mw.AppHandler) echo.HandlerFunc {
-	return mw.Wrap(s.appCtx, h)
+	return mw.Wrap(h)
 }
 
 func (s *server) setupServer() {
 	apiGroup := s.e.Group("/api")
+	s.apiBase(apiGroup)
+	apiGroup.Use(mw.APIBase(s.appCtx))
 	apiGroup.POST("/setup", s.wrap(s.handlers.setup.FinalizeSetup))
 	s.exampleAPIRoute(apiGroup)
 
@@ -78,11 +82,17 @@ func (s *server) appRoutes(appGroup *echo.Group) {
 	})
 }
 
-func (s *server) apiRoutes(apiGroup *echo.Group) {
+func (s *server) apiBase(apiGroup *echo.Group) {
+	apiGroup.Use(mw.APIBase(s.appCtx))
+
 	// If environment is development, setup development middlewares
 	if s.config.Environment.IsDev() {
 		apiGroup.Use(mw.ApiDev())
 	}
+}
+
+func (s *server) apiRoutes(apiGroup *echo.Group) {
+	s.apiBase(apiGroup)
 
 	apiGroup.POST("/setup/status", s.wrap(s.handlers.setup.Status))
 
@@ -95,20 +105,54 @@ func (s *server) apiRoutes(apiGroup *echo.Group) {
 func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
 	apiGroup.GET("/example", s.wrap(func(ctx context.Context, c echo.Context) error {
 		log.Ctx(ctx).Info("example log", attr.String("first", "value"))
-		login := gen.Login{
+		login := core.Login{
 			Username: "username",
 			Password: "password",
 		}
-		return requests.JSON(c, &login)
+		return appjson.JSON(c, &login)
 	}))
 }
 
 func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *echo.Echo {
+	e := echo.New()
+
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		if err == nil {
+			e.DefaultHTTPErrorHandler(err, c)
+			return
+		}
+
+		var appErr apperror.AppError
+		if !errors.As(err, &appErr) {
+			e.DefaultHTTPErrorHandler(err, c)
+			return
+		}
+
+		attrs := append(appErr.Attr,
+			attr.Int("status", appErr.Status),
+			attr.String("code", appErr.Code),
+			attr.String("description", appErr.Description),
+		)
+		log.Ctx(appCtx).Error("response error", attrs...)
+
+		b, marshalErr := appjson.MarshalJSON(&core.AppError{
+			Code:        appErr.Code,
+			Message:     appErr.Message,
+			Description: appErr.Description,
+		})
+		if b == nil {
+			log.Ctx(appCtx).Error("failed to marshall app err", attr.Err(marshalErr))
+			b = []byte(fmt.Sprintf(`{code: "%s", message: "%s"}`, appErr.Code, appErr.Message))
+		}
+		e.DefaultHTTPErrorHandler(echo.NewHTTPError(appErr.Status, b), c)
+		return
+	}
+
 	s := server{
 		appCtx:     appCtx,
 		appContext: ac,
 		config:     config,
-		e:          echo.New(),
+		e:          e,
 		handlers: commonHandlers{
 			setup: handlers.NewSetupHandler(ac.SetupService, appCtx, config.SetupCh),
 		},

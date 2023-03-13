@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package setup;
+
+option go_package = "github.com/mdev5000/secretsanta/internal/requests/gen/setup";
+
+message Status {
+    string status = 1;
+}

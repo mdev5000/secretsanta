@@ -10,7 +10,7 @@ testPath="$(pwd)/tests/ui"
 scriptPath="$(pwd)/scripts"
 seccompFile="${scriptPath}/seccomp_profile.json"
 
-if docker run -it -v "${testPath}:/tests" \
+if ! docker run -it -v "${testPath}:/tests" \
   --network="docker_ui-test-network" \
   --rm --ipc=host \
   --user "$UID" --security-opt seccomp="${seccompFile}" \

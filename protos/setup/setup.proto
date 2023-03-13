@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package setup;
+
+import "core/user.proto";
+import "core/family.proto";
+
+option go_package = "github.com/mdev5000/secretsanta/internal/requests/gen/setup";
+
+message Setup {
+  core.User user = 1;
+  core.Family family = 2;
+}

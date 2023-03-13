@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/mdev5000/secretsanta/internal/requests/gen"
-	"github.com/mdev5000/secretsanta/internal/user"
-	"github.com/mdev5000/secretsanta/internal/util/requests"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
+	"github.com/mdev5000/secretsanta/internal/user"
+	"github.com/mdev5000/secretsanta/internal/util/appjson"
 )
 
 type UserHandler struct {
@@ -19,9 +20,9 @@ func NewUserHandler(svc *user.Service) *UserHandler {
 func (h *UserHandler) Login(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var data gen.Login
+	var data core.Login
 
-	if err := requests.UnmarshalJSON(c, &data); err != nil {
+	if err := appjson.UnmarshalJSON(c, &data); err != nil {
 		// log error
 		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
 	}

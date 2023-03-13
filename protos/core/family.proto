@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/mdev5000/secretsanta/internal/requests/gen/core";
+
+message Family {
+  string name = 1;
+  string description = 2;
+}

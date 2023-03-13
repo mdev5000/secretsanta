@@ -1,4 +1,6 @@
 SPA_EMBED_PATH = "./backend/cmd/secretsanta/embedded"
+GO_PROTO_PATH_IN = "./backend/_build/goprotos"
+GO_PROTO_PATH_OUT = "./backend/internal/requests/gen"
 
 # dependencies ---------------------------------------------------------------------------------------------------------
 
@@ -11,10 +13,16 @@ deps.install: FORCE
 schemas.gen: schemas.gen.backend schemas.gen.frontend
 
 schemas.gen.backend:
-	protoc -I=protos --go_out=backend/internal protos/*
+	@rm -rf $(GO_PROTO_PATH_IN)
+	@mkdir -p $(GO_PROTO_PATH_IN)
+	protoc -I=protos --go_out=$(GO_PROTO_PATH_IN) protos/core/*
+	protoc -I=protos --go_out=$(GO_PROTO_PATH_IN) protos/setup/*
+	@rm -rf $(GO_PROTO_PATH_OUT)
+	@mv $(GO_PROTO_PATH_IN)/github.com/mdev5000/secretsanta/internal/requests/gen $(GO_PROTO_PATH_OUT)
 
 schemas.gen.frontend:
-	npx protoc --ts_out frontend/src/lib/requests --proto_path protos protos/*
+	npx protoc --ts_out frontend/src/lib/requests --proto_path protos protos/core/*
+	npx protoc --ts_out frontend/src/lib/requests --proto_path protos protos/setup/*
 
 
 # building -------------------------------------------------------------------------------------------------------------

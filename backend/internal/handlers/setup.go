@@ -2,7 +2,14 @@ package handlers
 
 import (
 	"context"
+	"errors"
+	"github.com/google/uuid"
+	setup2 "github.com/mdev5000/secretsanta/internal/requests/gen/setup"
+	"github.com/mdev5000/secretsanta/internal/util/apperror"
+	"github.com/mdev5000/secretsanta/internal/util/appjson"
+	"github.com/mdev5000/secretsanta/internal/util/cookie"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -16,10 +23,16 @@ type SetupService interface {
 	Setup(ctx context.Context, data setup.Data) error
 }
 
+var (
+	ErrAlreadySetup = errors.New("already setup")
+)
+
 type SetupHandler struct {
-	svc     SetupService
-	appCtx  context.Context
-	setupCh chan struct{}
+	svc             SetupService
+	appCtx          context.Context
+	setupCh         chan struct{}
+	lock            sync.Mutex
+	setupLeaderUUID string
 }
 
 func NewSetupHandler(svc SetupService, appCtx context.Context, setupCh chan struct{}) *SetupHandler {
@@ -40,6 +53,36 @@ func (h *SetupHandler) Status(ctx context.Context, c echo.Context) error {
 	}
 
 	return c.JSONBlob(http.StatusOK, []byte(`{"status": "ok"}`))
+}
+
+func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
+	isSetup, err := h.svc.IsSetup(ctx)
+	if err != nil {
+		return err
+	}
+	if isSetup {
+		return apperror.Error(apperror.AlreadySetup, ErrAlreadySetup)
+	}
+
+	uid, _ := cookie.GetSetupLeaderCookie(c)
+	if uid == "" {
+		uid = uuid.New().String()
+	}
+
+	succeededAsLeader := false
+
+	h.lock.Lock()
+	if h.setupLeaderUUID == "" {
+		h.setupLeaderUUID = uid
+		succeededAsLeader = true
+	}
+	h.lock.Unlock()
+
+	c.SetCookie(cookie.SetupLeaderCookie(uid))
+	resp := setup2.LeaderStatus{
+		IsLeader: succeededAsLeader,
+	}
+	return appjson.JSON(c, &resp)
 }
 
 func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) error {

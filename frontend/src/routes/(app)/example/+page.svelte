@@ -1,7 +1,7 @@
 <script lang="ts">
     import Button, {Label} from '@smui/button';
-    import {Login} from "$lib/requests/login"
-    import {getData, Result} from "$lib/rest/rest"
+    import {Login} from "$lib/requests/core/login"
+    import {getData} from "$lib/rest/rest"
 
     let another = 0;
     let clicked = 0;

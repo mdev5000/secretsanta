@@ -1,5 +1,5 @@
 <script>
-    import {Login} from "$lib/requests/login"
+    import {Login} from "$lib/requests/core/login"
 
     const login = Login.fromJsonString(`{"username":"first", "password":"password01"}`);
 </script>

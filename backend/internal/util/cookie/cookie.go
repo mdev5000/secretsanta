@@ -8,6 +8,7 @@ import (
 var domain = ""
 
 func init() {
+	// @todo review this
 	domain = os.Getenv("DOMAIN")
 }
 
@@ -21,15 +22,4 @@ func MakeCookie(c Cookie) *http.Cookie {
 		c.Path = "/"
 	}
 	return &c
-}
-
-func SiteSetupCookie(isSetup bool) *http.Cookie {
-	value := "false"
-	if isSetup {
-		value = "true"
-	}
-	return MakeCookie(Cookie{
-		Name:  "site.isSetup",
-		Value: value,
-	})
 }
