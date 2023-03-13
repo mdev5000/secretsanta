@@ -14,7 +14,7 @@ func JSON(c echo.Context, m proto.Message) error {
 		// @todo log error
 		return echo.NewHTTPError(500, "server error")
 	}
-	return c.Blob(200, "application/json", b)
+	return c.JSONBlob(200, b)
 }
 
 func MarshalJSON(m proto.Message) ([]byte, error) {

@@ -58,7 +58,7 @@ func (s *server) wrap(h mw.AppHandler) echo.HandlerFunc {
 func (s *server) setupServer() {
 	apiGroup := s.e.Group("/api")
 	s.apiBase(apiGroup)
-	apiGroup.Use(mw.APIBase(s.appCtx))
+	apiGroup.GET("/setup/leader-status", s.wrap(s.handlers.setup.LeaderStatus))
 	apiGroup.POST("/setup", s.wrap(s.handlers.setup.FinalizeSetup))
 	s.exampleAPIRoute(apiGroup)
 
@@ -83,7 +83,7 @@ func (s *server) appRoutes(appGroup *echo.Group) {
 }
 
 func (s *server) apiBase(apiGroup *echo.Group) {
-	apiGroup.Use(mw.APIBase(s.appCtx))
+	apiGroup.Use(mw.APIBase(s.appCtx, s.config.Environment.IsDev()))
 
 	// If environment is development, setup development middlewares
 	if s.config.Environment.IsDev() {
@@ -94,7 +94,7 @@ func (s *server) apiBase(apiGroup *echo.Group) {
 func (s *server) apiRoutes(apiGroup *echo.Group) {
 	s.apiBase(apiGroup)
 
-	apiGroup.POST("/setup/status", s.wrap(s.handlers.setup.Status))
+	apiGroup.GET("/setup/status", s.wrap(s.handlers.setup.Status))
 
 	s.exampleAPIRoute(apiGroup)
 

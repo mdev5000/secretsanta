@@ -1,25 +1,24 @@
 package cookie
 
 import (
+	"context"
+	"github.com/mdev5000/secretsanta/internal/middleware"
 	"net/http"
-	"os"
+	"time"
 )
-
-var domain = ""
-
-func init() {
-	// @todo review this
-	domain = os.Getenv("DOMAIN")
-}
 
 type Cookie = http.Cookie
 
-func MakeCookie(c Cookie) *http.Cookie {
-	if c.Domain == "" {
-		c.Domain = domain
+func NewCookie(ctx context.Context) *http.Cookie {
+	c := http.Cookie{}
+	c.Expires = time.Now().Add(10 * 365 * 24 * time.Hour)
+	c.Path = "/"
+
+	isDev, _ := ctx.Value(middleware.IsDevKey).(bool)
+	if isDev {
+		// @todo figure out how to separate dev cookies
+		c.SameSite = http.SameSiteLaxMode
 	}
-	if c.Path == "" {
-		c.Path = "/"
-	}
+
 	return &c
 }

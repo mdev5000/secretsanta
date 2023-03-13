@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
+	"github.com/mdev5000/flog/attr"
 	setup2 "github.com/mdev5000/secretsanta/internal/requests/gen/setup"
 	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
@@ -72,13 +73,22 @@ func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
 	succeededAsLeader := false
 
 	h.lock.Lock()
+	leaderUUID := h.setupLeaderUUID
 	if h.setupLeaderUUID == "" {
 		h.setupLeaderUUID = uid
+		succeededAsLeader = true
+	} else if h.setupLeaderUUID == uid {
 		succeededAsLeader = true
 	}
 	h.lock.Unlock()
 
-	c.SetCookie(cookie.SetupLeaderCookie(uid))
+	log.Ctx(ctx).Info("attempting to get setup leadership",
+		attr.String("uid", uid),
+		attr.String("leader-uid", leaderUUID),
+		attr.Bool("acquired", succeededAsLeader),
+	)
+
+	c.SetCookie(cookie.SetupLeaderCookie(ctx, uid))
 	resp := setup2.LeaderStatus{
 		IsLeader: succeededAsLeader,
 	}

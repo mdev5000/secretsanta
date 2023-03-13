@@ -1,19 +1,20 @@
 package cookie
 
 import (
+	"context"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-func SiteSetupCookie(isSetup bool) *http.Cookie {
+func SiteSetupCookie(ctx context.Context, isSetup bool) *http.Cookie {
 	value := "false"
 	if isSetup {
 		value = "true"
 	}
-	return MakeCookie(Cookie{
-		Name:  "site.isSetup",
-		Value: value,
-	})
+	c := NewCookie(ctx)
+	c.Name = "site.isSetup"
+	c.Value = value
+	return c
 }
 
 const setupLeaderCookieName = "setup.uuid"
@@ -26,9 +27,10 @@ func GetSetupLeaderCookie(c echo.Context) (string, error) {
 	return cookie.Value, nil
 }
 
-func SetupLeaderCookie(uuid string) *http.Cookie {
-	return MakeCookie(Cookie{
-		Name:  setupLeaderCookieName,
-		Value: uuid,
-	})
+func SetupLeaderCookie(ctx context.Context, uuid string) *http.Cookie {
+	c := NewCookie(ctx)
+	c.Name = setupLeaderCookieName
+	c.Value = uuid
+	c.HttpOnly = true
+	return c
 }

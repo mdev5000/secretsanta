@@ -9,7 +9,9 @@ func ApiDev() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			// Support receiving the request from a different port, since the frontend dev server will run on a
 			// separate port.
-			c.Response().Header().Add("Access-Control-Allow-Origin", "*")
+			headers := c.Response().Header()
+			headers.Add("Access-Control-Allow-Origin", "http://localhost:5173")
+			headers.Add("Access-Control-Allow-Credentials", "true")
 			return next(c)
 		}
 	}

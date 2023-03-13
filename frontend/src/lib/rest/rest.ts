@@ -33,5 +33,5 @@ async function get(uri: string): Promise<Response> {
     if (dev) {
         url = "http://localhost:3000"
     }
-    return await axios.get(`${url}${uri}`);
+    return await axios.get(`${url}${uri}`,{withCredentials: true});
 }
