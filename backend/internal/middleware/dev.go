@@ -12,6 +12,7 @@ func ApiDev() echo.MiddlewareFunc {
 			headers := c.Response().Header()
 			headers.Add("Access-Control-Allow-Origin", "http://localhost:5173")
 			headers.Add("Access-Control-Allow-Credentials", "true")
+			headers.Add("Access-Control-Allow-Headers", "*")
 			return next(c)
 		}
 	}

@@ -25,7 +25,13 @@ make deps.install
 ```bash
 make dev.docker.up
 make dev.run
+
 ```
+
+### View and edit mongo data
+
+Go to http://localhost:8081
+
 ---
 
 ## Testing

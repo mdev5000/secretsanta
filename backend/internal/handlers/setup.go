@@ -47,13 +47,16 @@ func NewSetupHandler(svc SetupService, appCtx context.Context, setupCh chan stru
 func (h *SetupHandler) Status(ctx context.Context, c echo.Context) error {
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
-		return err
-	}
-	if !isSetup {
-		return echo.NewHTTPError(http.StatusInternalServerError, "not setup")
+		return apperror.InternalError(err)
 	}
 
-	return c.JSONBlob(http.StatusOK, []byte(`{"status": "ok"}`))
+	status := "setup"
+	if !isSetup {
+		status = "pending"
+	}
+
+	resp := setup2.Status{Status: status}
+	return appjson.JSON(c, &resp)
 }
 
 func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {

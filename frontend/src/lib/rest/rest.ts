@@ -35,3 +35,16 @@ async function get(uri: string): Promise<Response> {
     }
     return await axios.get(`${url}${uri}`,{withCredentials: true});
 }
+
+export async function postTmp(uri: string): Promise<Response> {
+    let url = "";
+    if (dev) {
+        url = "http://localhost:3000"
+    }
+    return await axios.post(`${url}${uri}`,{
+    }, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+}

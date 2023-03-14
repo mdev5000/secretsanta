@@ -8,7 +8,7 @@ if (process.env.REPORT_PATH !== "") {
     reportPath = process.env.REPORT_PATH;
 }
 
-if (process.env.BASE_URL !== "") {
+if (process.env.BASE_URL !== undefined) {
     baseURL = process.env.BASE_URL;
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/labstack/echo/v4"
@@ -55,11 +56,24 @@ func (s *server) wrap(h mw.AppHandler) echo.HandlerFunc {
 	return mw.Wrap(h)
 }
 
+func apiOptions(methods ...string) echo.HandlerFunc {
+	allow := strings.Join(methods, ",")
+	return func(c echo.Context) error {
+		headers := c.Response().Header()
+		headers.Add("Allow", allow)
+		headers.Add("Accept", "application/json")
+		headers.Add("Access-Control-Request-Method", allow)
+		return c.Blob(http.StatusNoContent, "application/json", nil)
+	}
+}
+
 func (s *server) setupServer() {
 	apiGroup := s.e.Group("/api")
 	s.apiBase(apiGroup)
+	apiGroup.GET("/setup/status", s.wrap(s.handlers.setup.Status))
 	apiGroup.GET("/setup/leader-status", s.wrap(s.handlers.setup.LeaderStatus))
-	apiGroup.POST("/setup", s.wrap(s.handlers.setup.FinalizeSetup))
+	apiGroup.POST("/setup/finalize-quick", s.wrap(s.handlers.setup.FinalizeSetup))
+	apiGroup.OPTIONS("/setup/finalize-quick", apiOptions("POST"))
 	s.exampleAPIRoute(apiGroup)
 
 	appGroup := s.e.Group("")

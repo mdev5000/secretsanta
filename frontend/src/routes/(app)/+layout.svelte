@@ -2,8 +2,23 @@
     import TopAppBar, {Row, Section, Title} from '@smui/top-app-bar';
     import IconButton from '@smui/icon-button';
     import {base} from "$app/paths";
+    import {dev, browser} from '$app/environment';
+    import {goto} from '$app/navigation';
+    import {getData} from "$lib/rest/rest";
+    import {Status} from "$lib/requests/setup/status";
 
     export const ssr = false;
+
+    async function checkStatus() {
+        const status = await getData<Status>(Status, "/api/setup/status");
+        if (status.data.status !== "setup") {
+            goto("/app/setup");
+        }
+    }
+
+    if (browser && dev) {
+        checkStatus();
+    }
 </script>
 
 <div class="app">

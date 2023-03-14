@@ -1,8 +1,9 @@
 <script lang="ts">
     import TextField from "@smui/textfield"
     import Button, {Label} from "@smui/button"
-    import {getData} from "../../../lib/rest/rest";
-    import {LeaderStatus} from "../../../lib/requests/setup/leader";
+    import {getData, postTmp} from "$lib/rest/rest";
+    import {LeaderStatus} from "$lib/requests/setup/leader";
+    import {goto} from "$app/navigation";
 
     let adminUsername = "admin";
     let adminFirstname = "Admiral"
@@ -11,18 +12,29 @@
     let defaultFamilyName = "Default";
     let defaultFamilyDescription = "Default Family";
 
-    let leadershipStatus = 'welcome';
+    let status: 'welcome'|'succeeded'|'failed'|'error'|'done' = 'welcome';
 
     let getLeadership = async (): Promise<null> => {
         const r = await getData<LeaderStatus>(LeaderStatus, "/api/setup/leader-status");
         if (r.status != 200) {
-            leadershipStatus = 'error';
+            status = 'error';
             return;
         }
         if (r.data.isLeader) {
-            leadershipStatus = 'succeeded';
+            status = 'succeeded';
         } else {
-            leadershipStatus = 'failed';
+            status = 'failed';
+        }
+    }
+
+    let finalize = async (e): Promise<null> => {
+        e.preventDefault();
+        const r = await postTmp("/api/setup/finalize-quick");
+        if (r.status == 200) {
+            status = 'done';
+            setTimeout(() => {
+                goto('/app');
+            }, 5000);
         }
     }
 
@@ -30,13 +42,13 @@
 <div>
     <h1>Setup</h1>
 
-    {#if leadershipStatus === 'welcome' || leadershipStatus === 'loading'}
+    {#if status === 'welcome' || status === 'loading'}
         <p>Welcome to Secret Santa! Click next to get started.</p>
         <Button on:click={() => getLeadership()}>Next</Button>
-    {:else if leadershipStatus === 'failed'}
+    {:else if status === 'failed'}
         <p>The site is already being setup by another computer or browser.</p>
         <p>If you are unable to complete the setup, please restart the server and refresh the page.</p>
-    {:else if leadershipStatus === 'succeeded'}
+    {:else if status === 'succeeded'}
         <form>
 
             <fieldset>
@@ -86,13 +98,15 @@
 
             <fieldset>
 
-                <Button class="submit" variant="raised">
+                <Button class="submit" variant="raised" on:click={finalize}>
                     <Label>Setup</Label>
                 </Button>
 
             </fieldset>
 
         </form>
+    {:else if status === 'done'}
+        Setup completed, will redirect to app in a moment...
     {/if}
 
 
