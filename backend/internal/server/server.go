@@ -8,6 +8,7 @@ import (
 	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
 	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
+	"google.golang.org/protobuf/proto"
 	"net/http"
 	"strings"
 	"sync"
@@ -52,6 +53,24 @@ type server struct {
 	handlers   commonHandlers
 }
 
+func wrap[T proto.Message](s *server, h func(context.Context, echo.Context) (int, T, error)) echo.HandlerFunc {
+	if err := mw.EnsureComplies[T](); err != nil {
+		panic(err)
+	}
+	return func(c echo.Context) error {
+		ctx := c.Request().Context()
+		status, resp, err := h(ctx, c)
+		if err != nil {
+			return err
+		}
+		m, err := appjson.MarshalJSON(resp)
+		if err != nil {
+			return err
+		}
+		return c.JSONBlob(status, m)
+	}
+}
+
 func (s *server) wrap(h mw.AppHandler) echo.HandlerFunc {
 	return mw.Wrap(h)
 }
@@ -70,7 +89,7 @@ func apiOptions(methods ...string) echo.HandlerFunc {
 func (s *server) setupServer() {
 	apiGroup := s.e.Group("/api")
 	s.apiBase(apiGroup)
-	apiGroup.GET("/setup/status", s.wrap(s.handlers.setup.Status))
+	apiGroup.GET("/setup/status", wrap(s, s.handlers.setup.Status))
 	apiGroup.GET("/setup/leader-status", s.wrap(s.handlers.setup.LeaderStatus))
 	apiGroup.POST("/setup/finalize-quick", s.wrap(s.handlers.setup.FinalizeSetup))
 	apiGroup.OPTIONS("/setup/finalize-quick", apiOptions("POST"))
@@ -108,7 +127,7 @@ func (s *server) apiBase(apiGroup *echo.Group) {
 func (s *server) apiRoutes(apiGroup *echo.Group) {
 	s.apiBase(apiGroup)
 
-	apiGroup.GET("/setup/status", s.wrap(s.handlers.setup.Status))
+	apiGroup.GET("/setup/status", wrap(s, s.handlers.setup.Status))
 
 	s.exampleAPIRoute(apiGroup)
 
@@ -123,7 +142,7 @@ func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
 			Username: "username",
 			Password: "password",
 		}
-		return appjson.JSON(c, &login)
+		return appjson.JSONOk(c, &login)
 	}))
 }
 

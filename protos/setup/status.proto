@@ -4,6 +4,9 @@ package setup;
 
 option go_package = "github.com/mdev5000/secretsanta/internal/requests/gen/setup";
 
+import "core/error.proto";
+
 message Status {
-    string status = 1;
+    core.AppError error = 1;
+    string status = 2;
 }

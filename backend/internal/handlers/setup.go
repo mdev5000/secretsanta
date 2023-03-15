@@ -44,10 +44,10 @@ func NewSetupHandler(svc SetupService, appCtx context.Context, setupCh chan stru
 	}
 }
 
-func (h *SetupHandler) Status(ctx context.Context, c echo.Context) error {
+func (h *SetupHandler) Status(ctx context.Context, c echo.Context) (int, *setup2.Status, error) {
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
-		return apperror.InternalError(err)
+		return 0, nil, apperror.InternalError(err)
 	}
 
 	status := "setup"
@@ -55,8 +55,7 @@ func (h *SetupHandler) Status(ctx context.Context, c echo.Context) error {
 		status = "pending"
 	}
 
-	resp := setup2.Status{Status: status}
-	return appjson.JSON(c, &resp)
+	return http.StatusOK, &setup2.Status{Status: status}, nil
 }
 
 func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
@@ -95,7 +94,7 @@ func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
 	resp := setup2.LeaderStatus{
 		IsLeader: succeededAsLeader,
 	}
-	return appjson.JSON(c, &resp)
+	return appjson.JSONOk(c, &resp)
 }
 
 func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) error {
