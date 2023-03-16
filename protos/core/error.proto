@@ -9,3 +9,7 @@ message AppError {
   string message = 2;
   string description = 3;
 }
+
+message AppErrorRs {
+  AppError error = 1;
+}

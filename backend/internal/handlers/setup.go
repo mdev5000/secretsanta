@@ -9,6 +9,7 @@ import (
 	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
 	"github.com/mdev5000/secretsanta/internal/util/cookie"
+	"github.com/mdev5000/secretsanta/internal/util/resp"
 	"net/http"
 	"sync"
 	"time"
@@ -44,10 +45,10 @@ func NewSetupHandler(svc SetupService, appCtx context.Context, setupCh chan stru
 	}
 }
 
-func (h *SetupHandler) Status(ctx context.Context, c echo.Context) (int, *setup2.Status, error) {
+func (h *SetupHandler) Status(ctx context.Context, c echo.Context) resp.Response[*setup2.Status] {
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
-		return 0, nil, apperror.InternalError(err)
+		resp.Err[*setup2.Status](apperror.InternalError(err))
 	}
 
 	status := "setup"
@@ -55,7 +56,7 @@ func (h *SetupHandler) Status(ctx context.Context, c echo.Context) (int, *setup2
 		status = "pending"
 	}
 
-	return http.StatusOK, &setup2.Status{Status: status}, nil
+	return resp.Ok(http.StatusOK, &setup2.Status{Status: status})
 }
 
 func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
@@ -97,7 +98,54 @@ func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
 	return appjson.JSONOk(c, &resp)
 }
 
-func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) error {
+func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) resp.ResponseEmpty {
+	// Only one setup request can occur at one time.
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	isSetup, err := h.svc.IsSetup(ctx)
+	if err != nil {
+		return resp.EmptyErr(apperror.InternalError(err))
+	}
+	if isSetup {
+		return resp.EmptyErr(apperror.Error(apperror.AlreadySetup, nil))
+	}
+
+	log.Ctx(ctx).Info("finalizing application setup")
+
+	var s setup2.Setup
+	if err := appjson.UnmarshalJSON(c, &s); err != nil {
+		return resp.EmptyErr(apperror.Error(apperror.BadRequest, err))
+	}
+
+	err = h.svc.Setup(ctx, setup.Data{
+		DefaultAdmin: &user.User{
+			Username:  s.User.Username,
+			Firstname: "Admin",
+			Lastname:  "Admin",
+		},
+		DefaultAdminPassword: []byte("admin01"),
+		DefaultFamily:        s.Family.Name,
+	})
+
+	if err != nil {
+		return resp.EmptyErr(err)
+	}
+
+	go func() {
+		log.Ctx(h.appCtx).Info("preparing to restart server")
+		// Give a bit of time for the response to be returned to the client.
+		time.Sleep(3 * time.Second)
+		log.Ctx(h.appCtx).Info("restarting server")
+		// This is captured at the application root and the server will be restarted. This will remove all setup
+		// application routes and install the actual routes.
+		h.setupCh <- struct{}{}
+	}()
+
+	return resp.Empty(http.StatusNoContent)
+}
+
+func (h *SetupHandler) FinalizeSetupQuick(ctx context.Context, c echo.Context) error {
 	// Only one setup request can occur at one time.
 	h.lock.Lock()
 	defer h.lock.Unlock()

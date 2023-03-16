@@ -13,16 +13,21 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Family } from "../core/family";
 import { User } from "../core/user";
+import { AppError } from "../core/error";
 /**
  * @generated from protobuf message setup.Setup
  */
 export interface Setup {
     /**
-     * @generated from protobuf field: core.User user = 1;
+     * @generated from protobuf field: core.AppError error = 1;
+     */
+    error?: AppError;
+    /**
+     * @generated from protobuf field: core.User user = 2;
      */
     user?: User;
     /**
-     * @generated from protobuf field: core.Family family = 2;
+     * @generated from protobuf field: core.Family family = 3;
      */
     family?: Family;
 }
@@ -30,8 +35,9 @@ export interface Setup {
 class Setup$Type extends MessageType<Setup> {
     constructor() {
         super("setup.Setup", [
-            { no: 1, name: "user", kind: "message", T: () => User },
-            { no: 2, name: "family", kind: "message", T: () => Family }
+            { no: 1, name: "error", kind: "message", T: () => AppError },
+            { no: 2, name: "user", kind: "message", T: () => User },
+            { no: 3, name: "family", kind: "message", T: () => Family }
         ]);
     }
     create(value?: PartialMessage<Setup>): Setup {
@@ -46,10 +52,13 @@ class Setup$Type extends MessageType<Setup> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* core.User user */ 1:
+                case /* core.AppError error */ 1:
+                    message.error = AppError.internalBinaryRead(reader, reader.uint32(), options, message.error);
+                    break;
+                case /* core.User user */ 2:
                     message.user = User.internalBinaryRead(reader, reader.uint32(), options, message.user);
                     break;
-                case /* core.Family family */ 2:
+                case /* core.Family family */ 3:
                     message.family = Family.internalBinaryRead(reader, reader.uint32(), options, message.family);
                     break;
                 default:
@@ -64,12 +73,15 @@ class Setup$Type extends MessageType<Setup> {
         return message;
     }
     internalBinaryWrite(message: Setup, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* core.User user = 1; */
+        /* core.AppError error = 1; */
+        if (message.error)
+            AppError.internalBinaryWrite(message.error, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* core.User user = 2; */
         if (message.user)
-            User.internalBinaryWrite(message.user, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* core.Family family = 2; */
+            User.internalBinaryWrite(message.user, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* core.Family family = 3; */
         if (message.family)
-            Family.internalBinaryWrite(message.family, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+            Family.internalBinaryWrite(message.family, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

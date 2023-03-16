@@ -11,12 +11,17 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { AppError } from "../core/error";
 /**
  * @generated from protobuf message setup.Status
  */
 export interface Status {
     /**
-     * @generated from protobuf field: string status = 1;
+     * @generated from protobuf field: core.AppError error = 1;
+     */
+    error?: AppError;
+    /**
+     * @generated from protobuf field: string status = 2;
      */
     status: string;
 }
@@ -24,7 +29,8 @@ export interface Status {
 class Status$Type extends MessageType<Status> {
     constructor() {
         super("setup.Status", [
-            { no: 1, name: "status", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "error", kind: "message", T: () => AppError },
+            { no: 2, name: "status", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Status>): Status {
@@ -39,7 +45,10 @@ class Status$Type extends MessageType<Status> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string status */ 1:
+                case /* core.AppError error */ 1:
+                    message.error = AppError.internalBinaryRead(reader, reader.uint32(), options, message.error);
+                    break;
+                case /* string status */ 2:
                     message.status = reader.string();
                     break;
                 default:
@@ -54,9 +63,12 @@ class Status$Type extends MessageType<Status> {
         return message;
     }
     internalBinaryWrite(message: Status, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string status = 1; */
+        /* core.AppError error = 1; */
+        if (message.error)
+            AppError.internalBinaryWrite(message.error, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string status = 2; */
         if (message.status !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.status);
+            writer.tag(2, WireType.LengthDelimited).string(message.status);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

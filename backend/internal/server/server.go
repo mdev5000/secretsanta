@@ -8,6 +8,7 @@ import (
 	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
 	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
+	"github.com/mdev5000/secretsanta/internal/util/resp"
 	"google.golang.org/protobuf/proto"
 	"net/http"
 	"strings"
@@ -53,21 +54,17 @@ type server struct {
 	handlers   commonHandlers
 }
 
-func wrap[T proto.Message](s *server, h func(context.Context, echo.Context) (int, T, error)) echo.HandlerFunc {
+func wrap[T proto.Message](s *server, h func(context.Context, echo.Context) resp.Response[T]) echo.HandlerFunc {
 	if err := mw.EnsureComplies[T](); err != nil {
 		panic(err)
 	}
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
-		status, resp, err := h(ctx, c)
-		if err != nil {
-			return err
+		rs := h(ctx, c)
+		if rs.Err != nil {
+			return rs.Err
 		}
-		m, err := appjson.MarshalJSON(resp)
-		if err != nil {
-			return err
-		}
-		return c.JSONBlob(status, m)
+		return c.JSONBlob(rs.Code, rs.Data)
 	}
 }
 
@@ -91,7 +88,9 @@ func (s *server) setupServer() {
 	s.apiBase(apiGroup)
 	apiGroup.GET("/setup/status", wrap(s, s.handlers.setup.Status))
 	apiGroup.GET("/setup/leader-status", s.wrap(s.handlers.setup.LeaderStatus))
-	apiGroup.POST("/setup/finalize-quick", s.wrap(s.handlers.setup.FinalizeSetup))
+	apiGroup.POST("/setup/finalize", wrap(s, s.handlers.setup.FinalizeSetup))
+	apiGroup.OPTIONS("/setup/finalize", apiOptions("POST"))
+	apiGroup.POST("/setup/finalize-quick", s.wrap(s.handlers.setup.FinalizeSetupQuick))
 	apiGroup.OPTIONS("/setup/finalize-quick", apiOptions("POST"))
 	s.exampleAPIRoute(apiGroup)
 

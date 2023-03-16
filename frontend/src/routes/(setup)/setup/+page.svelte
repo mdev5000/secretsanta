@@ -1,9 +1,12 @@
 <script lang="ts">
     import TextField from "@smui/textfield"
     import Button, {Label} from "@smui/button"
-    import {getData, postTmp} from "$lib/rest/rest";
+    import {getData, postData, postTmp} from "$lib/rest/rest";
     import {LeaderStatus} from "$lib/requests/setup/leader";
     import {goto} from "$app/navigation";
+    import {error} from "$lib/applog";
+    import {Setup} from "$lib/requests/setup/setup";
+    import {AppErrorRs} from "../../../lib/requests/core/error";
 
     let adminUsername = "admin";
     let adminFirstname = "Admiral"
@@ -12,23 +15,33 @@
     let defaultFamilyName = "Default";
     let defaultFamilyDescription = "Default Family";
 
-    let status: 'welcome'|'succeeded'|'failed'|'error'|'done' = 'welcome';
+    let status: 'welcome' | 'succeeded' | 'failed' | 'error' | 'done' = 'welcome';
 
     let getLeadership = async (): Promise<null> => {
         const r = await getData<LeaderStatus>(LeaderStatus, "/api/setup/leader-status");
         if (r.status != 200) {
+            error("leadership requested ended in error", r.data.error);
             status = 'error';
             return;
         }
-        if (r.data.isLeader) {
-            status = 'succeeded';
-        } else {
-            status = 'failed';
-        }
+        status = r.data.isLeader ? 'succeeded' : 'failed';
     }
 
     let finalize = async (e): Promise<null> => {
         e.preventDefault();
+        const data = Setup.toJson({
+            user: {
+                username: "some name"
+            },
+        })
+        const r2 = await postData<AppErrorRs>(AppErrorRs, '/api/setup/finalize', data)
+        if (r2.status == 200) {
+            status = 'done';
+            setTimeout(() => {
+                goto('/app');
+            }, 5000);
+        }
+
         const r = await postTmp("/api/setup/finalize-quick");
         if (r.status == 200) {
             status = 'done';
@@ -105,6 +118,8 @@
             </fieldset>
 
         </form>
+    {:else if status === 'error'}
+        Error occurred while setting up, please try refreshing the page.
     {:else if status === 'done'}
         Setup completed, will redirect to app in a moment...
     {/if}

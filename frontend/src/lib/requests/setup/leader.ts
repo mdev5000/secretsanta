@@ -11,12 +11,17 @@ import type { PartialMessage } from "@protobuf-ts/runtime";
 import { reflectionMergePartial } from "@protobuf-ts/runtime";
 import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
+import { AppError } from "../core/error";
 /**
  * @generated from protobuf message setup.LeaderStatus
  */
 export interface LeaderStatus {
     /**
-     * @generated from protobuf field: bool isLeader = 1;
+     * @generated from protobuf field: core.AppError error = 1;
+     */
+    error?: AppError;
+    /**
+     * @generated from protobuf field: bool isLeader = 2;
      */
     isLeader: boolean;
 }
@@ -24,7 +29,8 @@ export interface LeaderStatus {
 class LeaderStatus$Type extends MessageType<LeaderStatus> {
     constructor() {
         super("setup.LeaderStatus", [
-            { no: 1, name: "isLeader", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "error", kind: "message", T: () => AppError },
+            { no: 2, name: "isLeader", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
     }
     create(value?: PartialMessage<LeaderStatus>): LeaderStatus {
@@ -39,7 +45,10 @@ class LeaderStatus$Type extends MessageType<LeaderStatus> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* bool isLeader */ 1:
+                case /* core.AppError error */ 1:
+                    message.error = AppError.internalBinaryRead(reader, reader.uint32(), options, message.error);
+                    break;
+                case /* bool isLeader */ 2:
                     message.isLeader = reader.bool();
                     break;
                 default:
@@ -54,9 +63,12 @@ class LeaderStatus$Type extends MessageType<LeaderStatus> {
         return message;
     }
     internalBinaryWrite(message: LeaderStatus, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* bool isLeader = 1; */
+        /* core.AppError error = 1; */
+        if (message.error)
+            AppError.internalBinaryWrite(message.error, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* bool isLeader = 2; */
         if (message.isLeader !== false)
-            writer.tag(1, WireType.Varint).bool(message.isLeader);
+            writer.tag(2, WireType.Varint).bool(message.isLeader);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
