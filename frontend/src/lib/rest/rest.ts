@@ -1,12 +1,13 @@
 import axios from "axios";
 import type {AxiosResponse} from "axios";
 import type {JsonValue, PartialMessage} from "@protobuf-ts/runtime";
-import { dev } from '$app/environment';
+import {dev} from '$app/environment';
 
 export type Response = AxiosResponse;
 
 export interface Retrievable<T extends object> {
     create(d?: PartialMessage<T>): T
+
     fromJsonString(json: string): T
 }
 
@@ -33,18 +34,26 @@ export async function getData<T extends object>(r: Retrievable<T>, uri: string):
 }
 
 async function get(uri: string): Promise<Response> {
-    let url = "";
-    if (dev) {
-        url = "http://localhost:3000"
-    }
-    return await axios.get(`${url}${uri}`,{withCredentials: true});
+    return await axios.get(fullUrl(uri), {withCredentials: true});
 }
 
 export async function postData<T extends object>(
     response: Retrievable<T>, uri: string, requestJson: JsonValue): Promise<Result<T>> {
-    const rs = await axios.post(uri, requestJson);
+    const rs = await axios.post(fullUrl(uri), requestJson, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
     const result = response.create(rs.data)
     return new Result(rs.status, result);
+}
+
+function fullUrl(uri: string): string {
+    let url = "";
+    if (dev) {
+        url = "http://localhost:3000"
+    }
+    return `${url}${uri}`;
 }
 
 export async function postTmp(uri: string): Promise<Response> {
@@ -52,8 +61,7 @@ export async function postTmp(uri: string): Promise<Response> {
     if (dev) {
         url = "http://localhost:3000"
     }
-    return await axios.post(`${url}${uri}`,{
-    }, {
+    return await axios.post(`${url}${uri}`, {}, {
         headers: {
             'Content-Type': 'application/json'
         }

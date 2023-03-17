@@ -64,6 +64,9 @@ func wrap[T proto.Message](s *server, h func(context.Context, echo.Context) resp
 		if rs.Err != nil {
 			return rs.Err
 		}
+		if rs.Data == nil {
+			panic("either Err or Data must be setup on a response")
+		}
 		return c.JSONBlob(rs.Code, rs.Data)
 	}
 }
@@ -156,8 +159,7 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 
 		var appErr apperror.AppError
 		if !errors.As(err, &appErr) {
-			e.DefaultHTTPErrorHandler(err, c)
-			return
+			appErr, _ = apperror.InternalError(err).(apperror.AppError)
 		}
 
 		attrs := append(appErr.Attr,
@@ -165,7 +167,7 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 			attr.String("code", appErr.Code),
 			attr.String("description", appErr.Description),
 		)
-		log.Ctx(appCtx).Error("response error", attrs...)
+		log.Ctx(appCtx).Info("response error", attrs...)
 
 		b, marshalErr := appjson.MarshalJSON(&core.AppError{
 			Code:        appErr.Code,
@@ -176,7 +178,10 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 			log.Ctx(appCtx).Error("failed to marshall app err", attr.Err(marshalErr))
 			b = []byte(fmt.Sprintf(`{code: "%s", message: "%s"}`, appErr.Code, appErr.Message))
 		}
-		e.DefaultHTTPErrorHandler(echo.NewHTTPError(appErr.Status, b), c)
+		//e.DefaultHTTPErrorHandler(echo.NewHTTPError(appErr.Status, b), c)
+		if err := c.JSONBlob(appErr.Status, b); err != nil {
+			log.Ctx(appCtx).Error("failed to encode response", attr.Err(err))
+		}
 		return
 	}
 

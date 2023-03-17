@@ -5,6 +5,7 @@ package core;
 option go_package = "github.com/mdev5000/secretsanta/internal/requests/gen/core";
 
 message Family {
-  string name = 1;
-  string description = 2;
+  string id = 1;
+  string name = 2;
+  string description = 3;
 }

@@ -118,6 +118,10 @@ func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) resp.R
 		return resp.EmptyErr(apperror.Error(apperror.BadRequest, err))
 	}
 
+	if s.AdminPassword == "" {
+		return resp.EmptyErr(apperror.Error(apperror.BadRequest.WithDescription("missing password"), err))
+	}
+
 	err = h.svc.Setup(ctx, &setup.Data{
 		DefaultAdmin: &types.User{
 			Username:  s.Admin.Username,

@@ -1,7 +1,7 @@
 <script lang="ts">
     import {onMount} from "svelte";
 
-    export let message = undefined;
+    export let message = "";
 
     onMount(() => {
         message = "something"

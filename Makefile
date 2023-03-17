@@ -65,12 +65,15 @@ dev.run: FORCE
 test.all:
 	# Make sure we are not running development docker
 	$(MAKE) dev.docker.down
-	@echo "Test backend..."
-	$(MAKE) -C ./backend test.race
-	@echo "Test backend (done)."
+	@echo "Check frontend typing..."
+	$(MAKE) -C ./frontend check
+	@echo "Check frontend typing (done)"
 	@echo "Test frontend..."
 	$(MAKE) -C ./frontend test
 	@echo "Test frontend (done)."
+	@echo "Test backend..."
+	$(MAKE) -C ./backend test.race
+	@echo "Test backend (done)."
 	@echo "UI testing..."
 	$(MAKE) uitest.test.build
 	@echo "UI testing (done)."

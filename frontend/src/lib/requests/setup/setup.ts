@@ -13,36 +13,30 @@ import { MESSAGE_TYPE } from "@protobuf-ts/runtime";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Family } from "../core/family";
 import { User } from "../core/user";
-import { AppError } from "../core/error";
 /**
  * @generated from protobuf message setup.Setup
  */
 export interface Setup {
     /**
-     * @generated from protobuf field: core.AppError error = 1;
-     */
-    error?: AppError;
-    /**
-     * @generated from protobuf field: core.User admin = 2;
+     * @generated from protobuf field: core.User admin = 1;
      */
     admin?: User;
+    /**
+     * @generated from protobuf field: string adminPassword = 2;
+     */
+    adminPassword: string;
     /**
      * @generated from protobuf field: core.Family family = 3;
      */
     family?: Family;
-    /**
-     * @generated from protobuf field: string adminPassword = 4;
-     */
-    adminPassword: string;
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Setup$Type extends MessageType<Setup> {
     constructor() {
         super("setup.Setup", [
-            { no: 1, name: "error", kind: "message", T: () => AppError },
-            { no: 2, name: "admin", kind: "message", T: () => User },
-            { no: 3, name: "family", kind: "message", T: () => Family },
-            { no: 4, name: "adminPassword", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "admin", kind: "message", T: () => User },
+            { no: 2, name: "adminPassword", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "family", kind: "message", T: () => Family }
         ]);
     }
     create(value?: PartialMessage<Setup>): Setup {
@@ -57,17 +51,14 @@ class Setup$Type extends MessageType<Setup> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* core.AppError error */ 1:
-                    message.error = AppError.internalBinaryRead(reader, reader.uint32(), options, message.error);
-                    break;
-                case /* core.User admin */ 2:
+                case /* core.User admin */ 1:
                     message.admin = User.internalBinaryRead(reader, reader.uint32(), options, message.admin);
+                    break;
+                case /* string adminPassword */ 2:
+                    message.adminPassword = reader.string();
                     break;
                 case /* core.Family family */ 3:
                     message.family = Family.internalBinaryRead(reader, reader.uint32(), options, message.family);
-                    break;
-                case /* string adminPassword */ 4:
-                    message.adminPassword = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -81,18 +72,15 @@ class Setup$Type extends MessageType<Setup> {
         return message;
     }
     internalBinaryWrite(message: Setup, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* core.AppError error = 1; */
-        if (message.error)
-            AppError.internalBinaryWrite(message.error, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* core.User admin = 2; */
+        /* core.User admin = 1; */
         if (message.admin)
-            User.internalBinaryWrite(message.admin, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+            User.internalBinaryWrite(message.admin, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
+        /* string adminPassword = 2; */
+        if (message.adminPassword !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.adminPassword);
         /* core.Family family = 3; */
         if (message.family)
             Family.internalBinaryWrite(message.family, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
-        /* string adminPassword = 4; */
-        if (message.adminPassword !== "")
-            writer.tag(4, WireType.LengthDelimited).string(message.adminPassword);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -9,6 +9,9 @@ build: FORCE
 	npm run build
 	$(MAKE) assets.replacePaths
 
+check: FORCE
+	npm run check
+
 assets.replacePaths: FORCE
 	@echo "Fixing asset paths..."
 	@find ./assets -type f -name "*.js" -exec sed -i 's|http://localhost:3000/replaceme/assets|/assets|g' {} \;

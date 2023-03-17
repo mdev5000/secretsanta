@@ -16,17 +16,16 @@
 
     $: slug = computeSlug(name)
 
-    function computeSlug(name) {
+    function computeSlug(name: string) {
         return name.replaceAll(" ", "-").toLowerCase();
     }
-
 
     let families: Family[] = [
         {id: "default", name: "Default", selected: true},
         {id: "another", name: "Another", selected: false},
         {id: "third", name: "Third", selected: false},
     ];
-    let currentFamily = undefined;
+    let currentFamily: Family | undefined = undefined;
     $: unselectedFamilies = families.filter((f) => !f.selected);
     $: selectedFamilies = families.filter((f) => f.selected);
 
@@ -66,7 +65,7 @@
         }
     ];
 
-    let selectedSecretSantas = [];
+    let selectedSecretSantas: string[] = [];
 
     let steps = [
         "Step 1: Families",
@@ -84,7 +83,7 @@
         currentFamily = undefined;
     }
 
-    function familyRemoved(e) {
+    function familyRemoved(e: any) {
         families = familySelected(e.detail.chipId, false);
     }
 
