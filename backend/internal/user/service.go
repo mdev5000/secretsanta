@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/mdev5000/secretsanta/internal/mongo"
+	"github.com/mdev5000/secretsanta/internal/types"
 )
 
 type Service struct {
@@ -24,7 +25,7 @@ func (s *Service) Count(ctx context.Context) (int64, error) {
 	return s.store.Count(ctx)
 }
 
-func (s *Service) Login(ctx context.Context, username string, password []byte) (*User, error) {
+func (s *Service) Login(ctx context.Context, username string, password []byte) (*types.User, error) {
 	u, err := s.store.FindByUsername(ctx, username)
 	if err != nil {
 		return nil, err
@@ -39,7 +40,7 @@ func (s *Service) Login(ctx context.Context, username string, password []byte) (
 	return u, nil
 }
 
-func (s *Service) Create(ctx context.Context, u *User, password []byte) error {
+func (s *Service) Create(ctx context.Context, u *types.User, password []byte) error {
 	passwordHash, err := hashPassword(password)
 	// Purge password from memory.
 	for i := range password {
@@ -51,6 +52,6 @@ func (s *Service) Create(ctx context.Context, u *User, password []byte) error {
 	return s.store.Create(ctx, u, passwordHash)
 }
 
-func (s *Service) FindByID(ctx context.Context, id ID) (*User, error) {
+func (s *Service) FindByID(ctx context.Context, id types.ID) (*types.User, error) {
 	return s.store.FindByID(ctx, id)
 }

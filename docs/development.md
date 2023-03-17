@@ -48,7 +48,11 @@ make test.all
 cd tests/ui
 
 # run the ui tests
+# by default this assumes the dev environment is running
 npm run test
+
+# you can also test again a running instance
+BASE_URL="http://localhost:3000" npm run test
 
 # view the report
 npm run report

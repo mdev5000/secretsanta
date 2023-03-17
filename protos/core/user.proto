@@ -5,5 +5,8 @@ package core;
 option go_package = "github.com/mdev5000/secretsanta/internal/requests/gen/core";
 
 message User {
-  string username = 1;
+  string id = 1;
+  string username = 2;
+  string firstname = 3;
+  string lastname = 4;
 }

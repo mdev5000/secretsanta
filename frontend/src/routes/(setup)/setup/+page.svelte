@@ -30,9 +30,16 @@
     let finalize = async (e): Promise<null> => {
         e.preventDefault();
         const data = Setup.toJson({
-            user: {
-                username: "some name"
+            adminPassword: adminPassword,
+            admin: {
+                username: adminUsername,
+                firstname: adminFirstname,
+                lastname: adminLastname,
             },
+            family: {
+                name: defaultFamilyName,
+                description: defaultFamilyDescription,
+            }
         })
         const r2 = await postData<AppErrorRs>(AppErrorRs, '/api/setup/finalize', data)
         if (r2.status == 200) {

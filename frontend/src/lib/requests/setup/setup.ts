@@ -23,25 +23,30 @@ export interface Setup {
      */
     error?: AppError;
     /**
-     * @generated from protobuf field: core.User user = 2;
+     * @generated from protobuf field: core.User admin = 2;
      */
-    user?: User;
+    admin?: User;
     /**
      * @generated from protobuf field: core.Family family = 3;
      */
     family?: Family;
+    /**
+     * @generated from protobuf field: string adminPassword = 4;
+     */
+    adminPassword: string;
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Setup$Type extends MessageType<Setup> {
     constructor() {
         super("setup.Setup", [
             { no: 1, name: "error", kind: "message", T: () => AppError },
-            { no: 2, name: "user", kind: "message", T: () => User },
-            { no: 3, name: "family", kind: "message", T: () => Family }
+            { no: 2, name: "admin", kind: "message", T: () => User },
+            { no: 3, name: "family", kind: "message", T: () => Family },
+            { no: 4, name: "adminPassword", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<Setup>): Setup {
-        const message = {};
+        const message = { adminPassword: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<Setup>(this, message, value);
@@ -55,11 +60,14 @@ class Setup$Type extends MessageType<Setup> {
                 case /* core.AppError error */ 1:
                     message.error = AppError.internalBinaryRead(reader, reader.uint32(), options, message.error);
                     break;
-                case /* core.User user */ 2:
-                    message.user = User.internalBinaryRead(reader, reader.uint32(), options, message.user);
+                case /* core.User admin */ 2:
+                    message.admin = User.internalBinaryRead(reader, reader.uint32(), options, message.admin);
                     break;
                 case /* core.Family family */ 3:
                     message.family = Family.internalBinaryRead(reader, reader.uint32(), options, message.family);
+                    break;
+                case /* string adminPassword */ 4:
+                    message.adminPassword = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -76,12 +84,15 @@ class Setup$Type extends MessageType<Setup> {
         /* core.AppError error = 1; */
         if (message.error)
             AppError.internalBinaryWrite(message.error, writer.tag(1, WireType.LengthDelimited).fork(), options).join();
-        /* core.User user = 2; */
-        if (message.user)
-            User.internalBinaryWrite(message.user, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
+        /* core.User admin = 2; */
+        if (message.admin)
+            User.internalBinaryWrite(message.admin, writer.tag(2, WireType.LengthDelimited).fork(), options).join();
         /* core.Family family = 3; */
         if (message.family)
             Family.internalBinaryWrite(message.family, writer.tag(3, WireType.LengthDelimited).fork(), options).join();
+        /* string adminPassword = 4; */
+        if (message.adminPassword !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.adminPassword);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -4,6 +4,8 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/mdev5000/secretsanta/internal/family"
+	"github.com/mdev5000/secretsanta/internal/util/transactions"
 	"net/http"
 	"os"
 
@@ -62,11 +64,13 @@ func run() error {
 	db := client.Database("ssdev")
 
 	ac := appcontext.AppContext{
-		UserService: user.NewService(db.Collection(user.CollectionUsers)),
-		SPAContent:  spaContent,
+		TransactionMgr: transactions.NoTransactions(),
+		UserService:    user.NewService(db.Collection(user.CollectionUsers)),
+		FamilyService:  family.NewService(db.Collection(family.CollectionFamilies)),
+		SPAContent:     spaContent,
 	}
 
-	ac.SetupService = setup.NewSetupService(ac.UserService)
+	ac.SetupService = setup.NewService(ac.TransactionMgr, ac.UserService, ac.FamilyService)
 
 	return runServer(ctx, ac, cfg)
 }

@@ -1,12 +1,10 @@
-package user
+package types
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
-type ID = uuid.UUID
+type ID = string
 
 type User struct {
 	ID           ID

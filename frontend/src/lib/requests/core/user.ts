@@ -16,19 +16,34 @@ import { MessageType } from "@protobuf-ts/runtime";
  */
 export interface User {
     /**
-     * @generated from protobuf field: string username = 1;
+     * @generated from protobuf field: string id = 1;
+     */
+    id: string;
+    /**
+     * @generated from protobuf field: string username = 2;
      */
     username: string;
+    /**
+     * @generated from protobuf field: string firstname = 3;
+     */
+    firstname: string;
+    /**
+     * @generated from protobuf field: string lastname = 4;
+     */
+    lastname: string;
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class User$Type extends MessageType<User> {
     constructor() {
         super("core.User", [
-            { no: 1, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "id", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "firstname", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "lastname", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
     create(value?: PartialMessage<User>): User {
-        const message = { username: "" };
+        const message = { id: "", username: "", firstname: "", lastname: "" };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<User>(this, message, value);
@@ -39,8 +54,17 @@ class User$Type extends MessageType<User> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string username */ 1:
+                case /* string id */ 1:
+                    message.id = reader.string();
+                    break;
+                case /* string username */ 2:
                     message.username = reader.string();
+                    break;
+                case /* string firstname */ 3:
+                    message.firstname = reader.string();
+                    break;
+                case /* string lastname */ 4:
+                    message.lastname = reader.string();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -54,9 +78,18 @@ class User$Type extends MessageType<User> {
         return message;
     }
     internalBinaryWrite(message: User, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string username = 1; */
+        /* string id = 1; */
+        if (message.id !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.id);
+        /* string username = 2; */
         if (message.username !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.username);
+            writer.tag(2, WireType.LengthDelimited).string(message.username);
+        /* string firstname = 3; */
+        if (message.firstname !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.firstname);
+        /* string lastname = 4; */
+        if (message.lastname !== "")
+            writer.tag(4, WireType.LengthDelimited).string(message.lastname);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

@@ -5,7 +5,8 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/mdev5000/flog/attr"
-	setup2 "github.com/mdev5000/secretsanta/internal/requests/gen/setup"
+	rq "github.com/mdev5000/secretsanta/internal/requests/gen/setup"
+	"github.com/mdev5000/secretsanta/internal/types"
 	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
 	"github.com/mdev5000/secretsanta/internal/util/cookie"
@@ -16,13 +17,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/mdev5000/secretsanta/internal/setup"
-	"github.com/mdev5000/secretsanta/internal/user"
 	"github.com/mdev5000/secretsanta/internal/util/log"
 )
 
 type SetupService interface {
 	IsSetup(ctx context.Context) (bool, error)
-	Setup(ctx context.Context, data setup.Data) error
+	Setup(ctx context.Context, data *setup.Data) error
 }
 
 var (
@@ -45,10 +45,10 @@ func NewSetupHandler(svc SetupService, appCtx context.Context, setupCh chan stru
 	}
 }
 
-func (h *SetupHandler) Status(ctx context.Context, c echo.Context) resp.Response[*setup2.Status] {
+func (h *SetupHandler) Status(ctx context.Context, c echo.Context) resp.Response[*rq.Status] {
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
-		resp.Err[*setup2.Status](apperror.InternalError(err))
+		resp.Err[*rq.Status](apperror.InternalError(err))
 	}
 
 	status := "setup"
@@ -56,7 +56,7 @@ func (h *SetupHandler) Status(ctx context.Context, c echo.Context) resp.Response
 		status = "pending"
 	}
 
-	return resp.Ok(http.StatusOK, &setup2.Status{Status: status})
+	return resp.Ok(http.StatusOK, &rq.Status{Status: status})
 }
 
 func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
@@ -92,7 +92,7 @@ func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
 	)
 
 	c.SetCookie(cookie.SetupLeaderCookie(ctx, uid))
-	resp := setup2.LeaderStatus{
+	resp := rq.LeaderStatus{
 		IsLeader: succeededAsLeader,
 	}
 	return appjson.JSONOk(c, &resp)
@@ -113,19 +113,22 @@ func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) resp.R
 
 	log.Ctx(ctx).Info("finalizing application setup")
 
-	var s setup2.Setup
+	var s rq.Setup
 	if err := appjson.UnmarshalJSON(c, &s); err != nil {
 		return resp.EmptyErr(apperror.Error(apperror.BadRequest, err))
 	}
 
-	err = h.svc.Setup(ctx, setup.Data{
-		DefaultAdmin: &user.User{
-			Username:  s.User.Username,
-			Firstname: "Admin",
-			Lastname:  "Admin",
+	err = h.svc.Setup(ctx, &setup.Data{
+		DefaultAdmin: &types.User{
+			Username:  s.Admin.Username,
+			Firstname: s.Admin.Firstname,
+			Lastname:  s.Admin.Lastname,
 		},
-		DefaultAdminPassword: []byte("admin01"),
-		DefaultFamily:        s.Family.Name,
+		DefaultAdminPassword: []byte(s.AdminPassword),
+		DefaultFamily: &types.Family{
+			Name:        s.Family.Name,
+			Description: s.Family.Description,
+		},
 	})
 
 	if err != nil {
@@ -160,14 +163,17 @@ func (h *SetupHandler) FinalizeSetupQuick(ctx context.Context, c echo.Context) e
 
 	log.Ctx(ctx).Info("finalizing application setup")
 
-	err = h.svc.Setup(ctx, setup.Data{
-		DefaultAdmin: &user.User{
+	err = h.svc.Setup(ctx, &setup.Data{
+		DefaultAdmin: &types.User{
 			Username:  "admin",
 			Firstname: "Admin",
 			Lastname:  "Admin",
 		},
 		DefaultAdminPassword: []byte("admin01"),
-		DefaultFamily:        "Default",
+		DefaultFamily: &types.Family{
+			Name:        "Default",
+			Description: "Default family",
+		},
 	})
 
 	if err != nil {

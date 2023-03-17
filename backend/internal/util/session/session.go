@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
-	"github.com/mdev5000/secretsanta/internal/user"
+	"github.com/mdev5000/secretsanta/internal/types"
 )
 
 const (
@@ -18,12 +18,12 @@ type Session struct {
 	sess *sessions.Session
 }
 
-func (s Session) SetUserID(userID user.ID) {
+func (s Session) SetUserID(userID types.ID) {
 	s.Set(KeyUserID, userID)
 }
 
-func (s Session) UserID() (user.ID, error) {
-	id, ok := s.Get(KeyUserID).(user.ID)
+func (s Session) UserID() (types.ID, error) {
+	id, ok := s.Get(KeyUserID).(types.ID)
 	if !ok {
 		return id, fmt.Errorf("invalid userID '%t'", s.Get(KeyUserID))
 	}

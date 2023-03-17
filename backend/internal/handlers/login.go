@@ -35,7 +35,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 
 	c.SetCookie(&http.Cookie{
 		Name:  "user.id",
-		Value: u.ID.String(),
+		Value: u.ID,
 	})
 
 	return nil

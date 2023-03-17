@@ -1,7 +1,8 @@
-package user
+package stores
 
 import (
 	"context"
+	"github.com/mdev5000/secretsanta/internal/types"
 	"github.com/mdev5000/secretsanta/testutil/compare"
 	"go.mongodb.org/mongo-driver/bson"
 	"testing"
@@ -12,16 +13,18 @@ import (
 )
 
 func Test_canCreateNewUsers(t *testing.T) {
+	ctx := context.Background()
 	db := acquireDb(t)
 	col := db.Collection(user.CollectionUsers)
+	deleteAll(t, ctx, col)
+
 	svc := user.NewService(col)
-	u := user.User{
+	u := types.User{
 		Username:  "bob",
 		Firstname: "Bob",
 		Lastname:  "Test",
 	}
 	called := time.Now().UTC()
-	ctx := context.Background()
 	err := svc.Create(ctx, &u, []byte("mypassword"))
 	require.NoError(t, err)
 	require.NotNil(t, u.ID)
@@ -34,19 +37,26 @@ func Test_canCreateNewUsers(t *testing.T) {
 	newUser, err := svc.FindByID(ctx, u.ID)
 	require.NoError(t, err)
 
-	compare.Equal(t, newUser, &u, compare.IgnoreFields(user.User{}, "UpdatedAt", "PasswordHash"))
+	//compare.Equal(t, newUser, &u, compare.IgnoreFields(types.User{}, "UpdatedAt", "PasswordHash"))
+	rqUsersMatches(t, newUser, &u)
+}
+
+func rqUsersMatches(t *testing.T, existing, expected *types.User) {
+	compare.Equal(t, expected, existing, compare.IgnoreFields(types.User{}, "UpdatedAt", "PasswordHash"))
 }
 
 func Test_canLoginNewUsers(t *testing.T) {
+	ctx := context.Background()
 	db := acquireDb(t)
 	col := db.Collection(user.CollectionUsers)
+	deleteAll(t, ctx, col)
+
 	svc := user.NewService(col)
-	u := user.User{
+	u := types.User{
 		Username:  "bob",
 		Firstname: "Bob",
 		Lastname:  "Test",
 	}
-	ctx := context.Background()
 	err := svc.Create(ctx, &u, []byte("mypassword"))
 	require.NoError(t, err)
 

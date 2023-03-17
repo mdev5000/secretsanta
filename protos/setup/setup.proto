@@ -10,6 +10,7 @@ option go_package = "github.com/mdev5000/secretsanta/internal/requests/gen/setup
 
 message Setup {
   core.AppError error = 1;
-  core.User user = 2;
+  core.User admin = 2;
   core.Family family = 3;
+  string adminPassword = 4;
 }

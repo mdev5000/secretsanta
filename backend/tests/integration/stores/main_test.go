@@ -1,10 +1,12 @@
-package user
+package stores
 
 import (
 	"context"
+	"fmt"
 	"github.com/mdev5000/secretsanta/internal/mongo"
 	"github.com/mdev5000/secretsanta/internal/user"
 	"github.com/mdev5000/secretsanta/testutil/mongopool"
+	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"os"
@@ -13,6 +15,19 @@ import (
 
 var runDbTests bool
 var pool *mongopool.DbPool
+
+func deleteAll(t *testing.T, ctx context.Context, cols ...*mongo.Collection) {
+	for _, col := range cols {
+		_, err := col.DeleteMany(ctx, bson.D{})
+		require.NoError(t, err)
+	}
+}
+
+func requireCountEq(t *testing.T, ctx context.Context, col *mongo.Collection, expected int64) {
+	numDocs, err := col.CountDocuments(ctx, bson.D{})
+	require.NoError(t, err)
+	require.Equal(t, expected, numDocs)
+}
 
 func acquireDb(t *testing.T) *mongo.Database {
 	if !runDbTests {
@@ -43,6 +58,7 @@ func TestMain(m *testing.M) {
 	}
 
 	code := m.Run()
+	fmt.Println("run code", code)
 
 	// You can't defer this because os.Exit doesn't care for defer
 	pool.Close(true)

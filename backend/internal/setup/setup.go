@@ -2,31 +2,60 @@ package setup
 
 import (
 	"context"
-	"github.com/mdev5000/secretsanta/internal/user"
+	"fmt"
+	"github.com/mdev5000/secretsanta/internal/types"
 	"sync"
 )
 
+type TransactionMgr interface {
+	WithTransaction(context.Context, func(ctx context.Context) error) error
+}
+
+type UserService interface {
+	Create(ctx context.Context, admin *types.User, password []byte) error
+	Count(context.Context) (int64, error)
+}
+
+type FamilyService interface {
+	Create(ctx context.Context, family *types.Family) error
+}
+
 type Service struct {
-	users      *user.Service
-	setupMutex sync.RWMutex
-	isSetup    bool
+	users          UserService
+	family         FamilyService
+	transactionMgr TransactionMgr
+	setupMutex     sync.RWMutex
+	isSetup        bool
 }
 
 type Data struct {
-	DefaultAdmin         *user.User
+	DefaultAdmin         *types.User
 	DefaultAdminPassword []byte
-	DefaultFamily        string
+	DefaultFamily        *types.Family
 }
 
-func NewSetupService(users *user.Service) *Service {
+func NewService(transactionMgr TransactionMgr, users UserService, family FamilyService) *Service {
 	return &Service{
-		users: users,
+		transactionMgr: transactionMgr,
+		users:          users,
+		family:         family,
 	}
 }
 
-func (s *Service) Setup(ctx context.Context, data Data) error {
-	return s.users.Create(ctx, data.DefaultAdmin, data.DefaultAdminPassword)
-	// @todo setup default family
+func (s *Service) Setup(ctx context.Context, data *Data) error {
+	err := s.transactionMgr.WithTransaction(ctx, func(ctx context.Context) error {
+		if err := s.users.Create(ctx, data.DefaultAdmin, data.DefaultAdminPassword); err != nil {
+			return err
+		}
+		if err := s.family.Create(ctx, data.DefaultFamily); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to run setup: %w", err)
+	}
+	return nil
 }
 
 // IsSetup determines if the backend has been set up or if the setup page should be shown.
