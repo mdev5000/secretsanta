@@ -1,42 +1,45 @@
 package handlers
 
 import (
-	"net/http"
-
+	"context"
 	"github.com/labstack/echo/v4"
+	"github.com/mdev5000/flog/attr"
 	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
 	"github.com/mdev5000/secretsanta/internal/user"
+	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
+	"github.com/mdev5000/secretsanta/internal/util/resp"
+	"github.com/mdev5000/secretsanta/internal/util/session"
 )
 
+type Sessions interface {
+	Put(ctx context.Context, key string, value interface{})
+}
+
 type UserHandler struct {
-	svc *user.Service
+	sessions Sessions
+	svc      *user.Service
 }
 
-func NewUserHandler(svc *user.Service) *UserHandler {
-	return &UserHandler{svc: svc}
+func NewUserHandler(svc *user.Service, sessions Sessions) *UserHandler {
+	return &UserHandler{svc: svc, sessions: sessions}
 }
 
-func (h *UserHandler) Login(c echo.Context) error {
-	ctx := c.Request().Context()
-
+func (h *UserHandler) Login(ctx context.Context, c echo.Context) resp.ResponseEmpty {
 	var data core.Login
 
 	if err := appjson.UnmarshalJSON(c, &data); err != nil {
 		// log error
-		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
+		return resp.EmptyErr(apperror.Error(apperror.BadRequest, err))
 	}
 
 	u, err := h.svc.Login(ctx, data.Username, []byte(data.Password))
 	if err != nil {
 		// log error
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid credentials")
+		return resp.EmptyErr(apperror.Error(apperror.InvalidLogin, err, attr.String("user", u.ID)))
 	}
 
-	c.SetCookie(&http.Cookie{
-		Name:  "user.id",
-		Value: u.ID,
-	})
+	h.sessions.Put(ctx, session.UserID, u.ID)
 
-	return nil
+	return resp.Empty(200)
 }

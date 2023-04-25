@@ -4,8 +4,6 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"github.com/mdev5000/secretsanta/internal/family"
-	"github.com/mdev5000/secretsanta/internal/util/transactions"
 	"net/http"
 	"os"
 
@@ -13,12 +11,14 @@ import (
 	"github.com/mdev5000/flog/attr"
 	"github.com/mdev5000/secretsanta/internal/appcontext"
 	"github.com/mdev5000/secretsanta/internal/config"
+	"github.com/mdev5000/secretsanta/internal/family"
 	"github.com/mdev5000/secretsanta/internal/mongo"
 	"github.com/mdev5000/secretsanta/internal/server"
 	"github.com/mdev5000/secretsanta/internal/setup"
 	"github.com/mdev5000/secretsanta/internal/user"
 	"github.com/mdev5000/secretsanta/internal/util/log"
 	fz "github.com/mdev5000/secretsanta/internal/util/log/flog-zero"
+	"github.com/mdev5000/secretsanta/internal/util/transactions"
 )
 
 //go:embed all:embedded/*
@@ -64,6 +64,7 @@ func run() error {
 	db := client.Database("ssdev")
 
 	ac := appcontext.AppContext{
+		Db:             db,
 		TransactionMgr: transactions.NoTransactions(),
 		UserService:    user.NewService(db.Collection(user.CollectionUsers)),
 		FamilyService:  family.NewService(db.Collection(family.CollectionFamilies)),

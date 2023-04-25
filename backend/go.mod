@@ -3,14 +3,14 @@ module github.com/mdev5000/secretsanta
 go 1.19
 
 require (
+	github.com/alexedwards/scs/mongodbstore v0.0.0-20230305153148-62e546ce9d2d
+	github.com/alexedwards/scs/v2 v2.5.1
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/google/go-cmp v0.5.9
 	github.com/google/uuid v1.3.0
-	github.com/gorilla/sessions v1.2.1
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/labstack/echo-contrib v0.14.1
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/mdev5000/flog v0.0.0-20230312011309-57f51a709620
 	github.com/nathan-fiscaletti/consolesize-go v0.0.0-20220204101620-317176b6684d
@@ -43,11 +43,9 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/gorilla/context v1.1.1 // indirect
-	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/kr/text v0.2.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

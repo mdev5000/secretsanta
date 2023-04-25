@@ -3,10 +3,10 @@ package server
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
+	"github.com/alexedwards/scs/mongodbstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
-	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
 	"github.com/mdev5000/secretsanta/internal/util/resp"
 	"google.golang.org/protobuf/proto"
@@ -47,11 +47,12 @@ type commonHandlers struct {
 }
 
 type server struct {
-	appCtx     context.Context
-	appContext *appcontext.AppContext
-	config     *Config
-	e          *echo.Echo
-	handlers   commonHandlers
+	appCtx       context.Context
+	appContext   *appcontext.AppContext
+	config       *Config
+	e            *echo.Echo
+	handlers     commonHandlers
+	sessionStore *scs.SessionManager
 }
 
 func wrap[T proto.Message](s *server, h func(context.Context, echo.Context) resp.Response[T]) echo.HandlerFunc {
@@ -133,8 +134,8 @@ func (s *server) apiRoutes(apiGroup *echo.Group) {
 
 	s.exampleAPIRoute(apiGroup)
 
-	userHandler := handlers.NewUserHandler(s.appContext.UserService)
-	apiGroup.POST("/login", userHandler.Login)
+	userHandler := handlers.NewUserHandler(s.appContext.UserService, s.sessionStore)
+	apiGroup.POST("/login", wrap(s, userHandler.Login))
 }
 
 func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
@@ -151,45 +152,17 @@ func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
 func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *echo.Echo {
 	e := echo.New()
 
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		if err == nil {
-			e.DefaultHTTPErrorHandler(err, c)
-			return
-		}
+	e.HTTPErrorHandler = mw.ErrorHandler(appCtx)
 
-		var appErr apperror.AppError
-		if !errors.As(err, &appErr) {
-			appErr, _ = apperror.InternalError(err).(apperror.AppError)
-		}
-
-		attrs := append(appErr.Attr,
-			attr.Int("status", appErr.Status),
-			attr.String("code", appErr.Code),
-			attr.String("description", appErr.Description),
-		)
-		log.Ctx(appCtx).Info("response error", attrs...)
-
-		b, marshalErr := appjson.MarshalJSON(&core.AppError{
-			Code:        appErr.Code,
-			Message:     appErr.Message,
-			Description: appErr.Description,
-		})
-		if b == nil {
-			log.Ctx(appCtx).Error("failed to marshall app err", attr.Err(marshalErr))
-			b = []byte(fmt.Sprintf(`{code: "%s", message: "%s"}`, appErr.Code, appErr.Message))
-		}
-		//e.DefaultHTTPErrorHandler(echo.NewHTTPError(appErr.Status, b), c)
-		if err := c.JSONBlob(appErr.Status, b); err != nil {
-			log.Ctx(appCtx).Error("failed to encode response", attr.Err(err))
-		}
-		return
-	}
+	sessionStore := scs.New()
+	sessionStore.Store = mongodbstore.New(ac.Db)
 
 	s := server{
-		appCtx:     appCtx,
-		appContext: ac,
-		config:     config,
-		e:          e,
+		appCtx:       appCtx,
+		appContext:   ac,
+		config:       config,
+		e:            e,
+		sessionStore: sessionStore,
 		handlers: commonHandlers{
 			setup: handlers.NewSetupHandler(ac.SetupService, appCtx, config.SetupCh),
 		},
@@ -203,6 +176,8 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 		s.setupServer()
 		return s.e
 	}
+
+	e.Use(mw.Session(s.sessionStore))
 
 	apiGroup := s.e.Group("/api")
 	s.apiRoutes(apiGroup)

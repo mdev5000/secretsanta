@@ -4,6 +4,7 @@ import "net/http"
 
 const CodeInternalError = "internal-001"
 const CodeBadRequest = "internal-002"
+const CodeInvalidLogin = "auth-001"
 
 type ErrorCode struct {
 	status      int
@@ -19,6 +20,12 @@ func (e *ErrorCode) WithDescription(description string) ErrorCode {
 		message:     e.message,
 		description: description,
 	}
+}
+
+var InvalidLogin = ErrorCode{
+	status:  http.StatusBadRequest,
+	code:    CodeInvalidLogin,
+	message: "invalid login",
 }
 
 var BadRequest = ErrorCode{
