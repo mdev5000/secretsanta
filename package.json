@@ -27,6 +27,6 @@
   },
   "homepage": "https://github.com/mdev5000/secretsanta#readme",
   "devDependencies": {
-    "@protobuf-ts/plugin": "^2.8.2"
+    "@protobuf-ts/plugin": "^2.9.0"
   }
 }

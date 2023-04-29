@@ -12,6 +12,12 @@ Requires:
 - Docker compose
 - [protoc](https://grpc.io/docs/protoc-installation/)
 
+
+For updating dependencies ([npm-check-updates](https://github.com/raineorshine/npm-check-updates)):
+```bash
+npm install -g npm-check-updates
+```
+
 ### 2. Install deps
 
 ```bash

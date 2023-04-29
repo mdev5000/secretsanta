@@ -34,9 +34,11 @@
     <Button on:click={() => clicked++} variant="raised">
         <Label>Raised</Label>
     </Button>
-    <Button on:click={fetchIt} variant="raised" data-testid="fetcher">
-        <Label>Fetch</Label>
-    </Button>
+    <div data-testid="fetcher">
+        <Button on:click={fetchIt} variant="raised">
+            <Label>Fetch</Label>
+        </Button>
+    </div>
     <div>Clicked {clicked}</div>
     <div>Clicked {clicked2}</div>
     <div>Clicked {clicked3}</div>

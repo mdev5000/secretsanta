@@ -18,7 +18,7 @@
 
 <TopAppBar variant="static">
     <Row>
-        <Section align-start>
+        <Section align="start">
             <Button on:click={toggleOpen}>
                 <IconButton class="material-icons">menu</IconButton>
             </Button>
