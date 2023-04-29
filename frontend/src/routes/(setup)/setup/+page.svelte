@@ -1,7 +1,7 @@
 <script lang="ts">
     import TextField from "@smui/textfield"
     import Button, {Label} from "@smui/button"
-    import {getData, postData, postTmp} from "$lib/rest/rest";
+    import {getData, postData} from "$lib/rest/rest";
     import {LeaderStatus} from "$lib/requests/setup/leader";
     import {goto} from "$app/navigation";
     import {error} from "$lib/applog";

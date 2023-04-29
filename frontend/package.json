@@ -48,6 +48,7 @@
 	"type": "module",
 	"dependencies": {
 		"@protobuf-ts/runtime": "^2.8.2",
-		"axios": "^1.2.2"
+		"axios": "^1.2.2",
+		"svelte-media": "^0.1.5"
 	}
 }

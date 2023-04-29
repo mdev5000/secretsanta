@@ -1,11 +1,10 @@
 <script lang="ts">
-    import TopAppBar, {Row, Section, Title} from '@smui/top-app-bar';
-    import IconButton from '@smui/icon-button';
-    import {base} from "$app/paths";
     import {dev, browser} from '$app/environment';
     import {goto} from '$app/navigation';
     import {getData} from "$lib/rest/rest";
     import {Status} from "$lib/requests/setup/status";
+
+    import TopMenuBar from "$lib/components/topMenuBar.svelte"
 
     export const ssr = false;
 
@@ -24,26 +23,7 @@
 <div class="app">
 
     <div class="top-bar">
-        <TopAppBar
-                class="top-bar"
-                variant="static"
-        >
-            <Row>
-                <Section>
-                    <IconButton class="material-icons">menu</IconButton>
-                    <Title><a href="{base}/">Secret Santa</a></Title>
-                </Section>
-                <Section>
-                    <a href="{base}/example">Example</a>
-                    <a href="{base}/about">About</a>
-                </Section>
-                <Section align="end" toolbar>
-                    <IconButton class="material-icons" aria-label="Download">file_download</IconButton>
-                    <IconButton class="material-icons" aria-label="Print this page">print</IconButton>
-                    <IconButton class="material-icons" aria-label="Bookmark this page">bookmark</IconButton>
-                </Section>
-            </Row>
-        </TopAppBar>
+        <TopMenuBar/>
     </div>
 
     <main>
@@ -60,15 +40,6 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-  }
-
-  .top-bar {
-    a {
-      padding-left: 5px;
-      padding-right: 5px;
-      color: white;
-      text-decoration: none;
-    }
   }
 
   main {
