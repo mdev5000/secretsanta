@@ -6,7 +6,7 @@
     "report": "playwright show-report"
   },
   "devDependencies": {
-    "@playwright/test": "^1.28.1"
+    "@playwright/test": "^1.33.0"
   },
   "type": "module"
 }

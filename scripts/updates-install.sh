@@ -1,7 +1,6 @@
 # quick exit on error
 set -o errexit
 set -o nounset
-set -o pipefail
 
 echo "Updating backend"
 cd backend

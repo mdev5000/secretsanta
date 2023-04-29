@@ -8,6 +8,14 @@ deps.install: FORCE
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 	go install github.com/google/go-jsonnet/cmd/jsonnet@latest
 
+# updates --------------------------------------------------------------------------------------------------------------
+
+updates.list: FORCE
+	./scripts/updates-list.sh
+
+updates.install: FORCE
+	./scripts/updates-install.sh
+
 # protobuf schema ------------------------------------------------------------------------------------------------------
 
 schemas.gen: schemas.gen.backend schemas.gen.frontend
