@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"github.com/mdev5000/secretsanta/internal/util/env"
 	"net/http"
 	"os"
 
@@ -38,7 +39,7 @@ func run() error {
 
 	cfg := config.Config{
 		MongoURI: "mongodb://root:rootPW@localhost",
-		Env:      string(server.Prod),
+		Env:      string(env.Prod),
 	}
 	if err := config.LoadConfig(&cfg); err != nil {
 		return err
@@ -81,7 +82,7 @@ func runServer(ctx context.Context, ac appcontext.AppContext, cfg config.Config)
 	defer close(setupCh)
 
 	serverCfg := server.Config{
-		Environment: server.Environment(cfg.Env),
+		Environment: env.Environment(cfg.Env),
 		SetupCh:     setupCh,
 	}
 	address := ":3000"

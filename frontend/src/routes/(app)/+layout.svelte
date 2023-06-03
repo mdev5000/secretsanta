@@ -14,13 +14,11 @@
             goto("/app/setup");
         }
     }
-
     if (browser && dev) {
         checkStatus();
     }
 
-    // @todo eventually remove example stuff
-    if (!isLoggedIn() && ($page.url.pathname != "/app/example")) {
+    if (!isLoggedIn()) {
         goto("/app/login");
     }
 </script>

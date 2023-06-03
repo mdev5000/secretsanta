@@ -59,13 +59,13 @@ func (h *SetupHandler) Status(ctx context.Context, c echo.Context) resp.Response
 	return resp.Ok(http.StatusOK, &rq.Status{Status: status})
 }
 
-func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
+func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) resp.Response[*rq.LeaderStatus] {
 	isSetup, err := h.svc.IsSetup(ctx)
 	if err != nil {
-		return err
+		return resp.Err[*rq.LeaderStatus](err)
 	}
 	if isSetup {
-		return apperror.Error(apperror.AlreadySetup, ErrAlreadySetup)
+		return resp.Err[*rq.LeaderStatus](apperror.Error(apperror.AlreadySetup, ErrAlreadySetup))
 	}
 
 	uid, _ := cookie.GetSetupLeaderCookie(c)
@@ -92,10 +92,10 @@ func (h *SetupHandler) LeaderStatus(ctx context.Context, c echo.Context) error {
 	)
 
 	c.SetCookie(cookie.SetupLeaderCookie(ctx, uid))
-	resp := rq.LeaderStatus{
+
+	return resp.Ok(200, &rq.LeaderStatus{
 		IsLeader: succeededAsLeader,
-	}
-	return appjson.JSONOk(c, &resp)
+	})
 }
 
 func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) resp.ResponseEmpty {
@@ -150,49 +150,4 @@ func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) resp.R
 	}()
 
 	return resp.Empty(http.StatusNoContent)
-}
-
-func (h *SetupHandler) FinalizeSetupQuick(ctx context.Context, c echo.Context) error {
-	// Only one setup request can occur at one time.
-	h.lock.Lock()
-	defer h.lock.Unlock()
-
-	isSetup, err := h.svc.IsSetup(ctx)
-	if err != nil {
-		return err
-	}
-	if isSetup {
-		return echo.NewHTTPError(http.StatusBadRequest, "app is already setup")
-	}
-
-	log.Ctx(ctx).Info("finalizing application setup")
-
-	err = h.svc.Setup(ctx, &setup.Data{
-		DefaultAdmin: &types.User{
-			Username:  "admin",
-			Firstname: "Admin",
-			Lastname:  "Admin",
-		},
-		DefaultAdminPassword: []byte("admin01"),
-		DefaultFamily: &types.Family{
-			Name:        "Default",
-			Description: "Default family",
-		},
-	})
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to setup application")
-	}
-
-	go func() {
-		log.Ctx(h.appCtx).Info("preparing to restart server")
-		// Give a bit of time for the response to be returned to the client.
-		time.Sleep(3 * time.Second)
-		log.Ctx(h.appCtx).Info("restarting server")
-		// This is captured at the application root and the server will be restarted. This will remove all setup
-		// application routes and install the actual routes.
-		h.setupCh <- struct{}{}
-	}()
-
-	return c.JSONBlob(http.StatusOK, []byte(`{"status": "ok"}`))
 }

@@ -5,6 +5,6 @@ test('example test', async ({ page }) => {
 	// Wait till we can see the button before trying to click.
 	await page.textContent('data-testid=fetcher >> button', {timeout: 5000});
 	await page.click('data-testid=fetcher >> button');
-	let username = await page.textContent('data-testid=username');
-	expect(username).toBe('Username: username');
+	let status = await page.textContent('data-testid=status');
+	expect(status).toBe('Status: some status');
 });
