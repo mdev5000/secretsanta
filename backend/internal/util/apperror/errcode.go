@@ -4,32 +4,40 @@ import "net/http"
 
 const CodeInternalError = "internal-001"
 const CodeBadRequest = "internal-002"
+const CodeEchoError = "internal-003"
 const CodeInvalidLogin = "auth-001"
+const CodeNotAuthenticated = "auth-002"
 
 type ErrorCode struct {
-	status      int
-	code        string
-	message     string
-	description string
+	Status      int
+	Code        string
+	Message     string
+	Description string
 }
 
 func (e *ErrorCode) WithDescription(description string) ErrorCode {
 	return ErrorCode{
-		status:      e.status,
-		code:        e.code,
-		message:     e.message,
-		description: description,
+		Status:      e.Status,
+		Code:        e.Code,
+		Message:     e.Message,
+		Description: description,
 	}
 }
 
 var InvalidLogin = ErrorCode{
-	status:  http.StatusBadRequest,
-	code:    CodeInvalidLogin,
-	message: "invalid login",
+	Status:  http.StatusBadRequest,
+	Code:    CodeInvalidLogin,
+	Message: "invalid login",
 }
 
 var BadRequest = ErrorCode{
-	status:  http.StatusBadRequest,
-	code:    CodeBadRequest,
-	message: "invalid request",
+	Status:  http.StatusBadRequest,
+	Code:    CodeBadRequest,
+	Message: "invalid request",
+}
+
+var NotAuthenticated = ErrorCode{
+	Status:  http.StatusUnauthorized,
+	Code:    CodeNotAuthenticated,
+	Message: "access denied",
 }

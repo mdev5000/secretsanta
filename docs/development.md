@@ -125,3 +125,16 @@ message MyRequest {
 ```bash
 make schemas.gen
 ```
+
+
+## Updates
+
+```bash
+# List changes
+make updates.list
+
+# Install updates
+make updates.install
+```
+
+You'll also likely need to update playwright version in [run-test-ui.sh](scripts/run-test-ui.sh).

@@ -40,10 +40,10 @@ func InternalError(err error, attrs ...attr.Attr) error {
 
 func Error(ec ErrorCode, err error, attrs ...attr.Attr) error {
 	return AppError{
-		Status:      ec.status,
-		Code:        ec.code,
-		Message:     ec.message,
-		Description: ec.description,
+		Status:      ec.Status,
+		Code:        ec.Code,
+		Message:     ec.Message,
+		Description: ec.Description,
 		Err:         err,
 		Attr:        attrs,
 	}

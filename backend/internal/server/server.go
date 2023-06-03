@@ -4,11 +4,11 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"github.com/alexedwards/scs/mongodbstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
 	"github.com/mdev5000/secretsanta/internal/util/resp"
+	"github.com/mdev5000/secretsanta/internal/util/session"
 	"google.golang.org/protobuf/proto"
 	"net/http"
 	"strings"
@@ -47,12 +47,12 @@ type commonHandlers struct {
 }
 
 type server struct {
-	appCtx       context.Context
-	appContext   *appcontext.AppContext
-	config       *Config
-	e            *echo.Echo
-	handlers     commonHandlers
-	sessionStore *scs.SessionManager
+	appCtx     context.Context
+	appContext *appcontext.AppContext
+	config     *Config
+	e          *echo.Echo
+	handlers   commonHandlers
+	sessionMgr *scs.SessionManager
 }
 
 func wrap[T proto.Message](s *server, h func(context.Context, echo.Context) resp.Response[T]) echo.HandlerFunc {
@@ -134,8 +134,17 @@ func (s *server) apiRoutes(apiGroup *echo.Group) {
 
 	s.exampleAPIRoute(apiGroup)
 
-	userHandler := handlers.NewUserHandler(s.appContext.UserService, s.sessionStore)
+	userHandler := handlers.NewUserHandler(s.appContext.UserService, s.sessionMgr)
 	apiGroup.POST("/login", wrap(s, userHandler.Login))
+
+	// Authenticated  API routes
+
+	authGroup := apiGroup.Group("",
+		mw.EnsureLoggedIn(s.appCtx, s.sessionMgr),
+	)
+	authGroup.GET("/auth-test", func(c echo.Context) error {
+		return c.JSONBlob(202, []byte(`{"something": "yay"}`))
+	})
 }
 
 func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
@@ -154,15 +163,14 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 
 	e.HTTPErrorHandler = mw.ErrorHandler(appCtx)
 
-	sessionStore := scs.New()
-	sessionStore.Store = mongodbstore.New(ac.Db)
+	sessionStore := session.New(ac.Db)
 
 	s := server{
-		appCtx:       appCtx,
-		appContext:   ac,
-		config:       config,
-		e:            e,
-		sessionStore: sessionStore,
+		appCtx:     appCtx,
+		appContext: ac,
+		config:     config,
+		e:          e,
+		sessionMgr: sessionStore,
 		handlers: commonHandlers{
 			setup: handlers.NewSetupHandler(ac.SetupService, appCtx, config.SetupCh),
 		},
@@ -177,7 +185,8 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 		return s.e
 	}
 
-	e.Use(mw.Session(s.sessionStore))
+	// Load and save sessions.
+	e.Use(mw.Session(s.sessionMgr))
 
 	apiGroup := s.e.Group("/api")
 	s.apiRoutes(apiGroup)

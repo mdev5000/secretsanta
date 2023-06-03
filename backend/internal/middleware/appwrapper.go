@@ -29,6 +29,7 @@ func APIBase(appCtx context.Context, isDev bool) echo.MiddlewareFunc {
 				attr.String("traceId", traceId.String()))
 			ctx = context.WithValue(ctx, IsDevKey, isDev)
 			c.SetRequest(rq.WithContext(ctx))
+
 			return next(c)
 		}
 	}

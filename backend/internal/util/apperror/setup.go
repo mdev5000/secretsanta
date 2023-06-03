@@ -3,7 +3,7 @@ package apperror
 import "net/http"
 
 var AlreadySetup = ErrorCode{
-	status:  http.StatusBadRequest,
-	code:    CodeBadRequest,
-	message: "already setup",
+	Status:  http.StatusBadRequest,
+	Code:    CodeBadRequest,
+	Message: "already setup",
 }
