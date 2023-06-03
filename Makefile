@@ -90,6 +90,8 @@ test.all:
 
 # ui testing -----------------------------------------------------------------------------------------------------------
 
+uitest.test.rebuild: uitest.down uitest.test.build
+
 uitest.test.build: uitest.build
 	$(MAKE) uitest.test
 

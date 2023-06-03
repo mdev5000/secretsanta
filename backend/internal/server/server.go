@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"github.com/mdev5000/secretsanta/internal/requests/gen/core"
+	"github.com/mdev5000/secretsanta/internal/util/apperror"
 	"github.com/mdev5000/secretsanta/internal/util/appjson"
 	"github.com/mdev5000/secretsanta/internal/util/resp"
 	"github.com/mdev5000/secretsanta/internal/util/session"
@@ -62,6 +63,9 @@ func wrap[T proto.Message](s *server, h func(context.Context, echo.Context) resp
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 		rs := h(ctx, c)
+		if err := session.TrySaveSession(ctx, s.sessionMgr, c); err != nil {
+			return apperror.InternalError(fmt.Errorf("failed to save session data: %w", err))
+		}
 		if rs.Err != nil {
 			return rs.Err
 		}
@@ -109,7 +113,7 @@ func (s *server) appRoutes(appGroup *echo.Group) {
 	contentRewrite := middleware.Rewrite(map[string]string{"/*": "/embedded/$1"})
 
 	s.e.GET("assets/*", contentHandler, contentRewrite)
-	homePage := mkHomePageHandler(s.appContext.SPAContent)
+	homePage := mkHomePageHandler(s.sessionMgr, s.appContext.SPAContent)
 	appGroup.GET("app", homePage)
 	appGroup.GET("app/*", homePage)
 
@@ -119,7 +123,7 @@ func (s *server) appRoutes(appGroup *echo.Group) {
 }
 
 func (s *server) apiBase(apiGroup *echo.Group) {
-	apiGroup.Use(mw.APIBase(s.appCtx, s.config.Environment.IsDev()))
+	//apiGroup.Use(mw.APIBase(s.appCtx, s.config.Environment.IsDev()))
 
 	// If environment is development, setup development middlewares
 	if s.config.Environment.IsDev() {
@@ -134,8 +138,11 @@ func (s *server) apiRoutes(apiGroup *echo.Group) {
 
 	s.exampleAPIRoute(apiGroup)
 
-	userHandler := handlers.NewUserHandler(s.appContext.UserService, s.sessionMgr)
+	userHandler := handlers.NewAuthHandler(s.appContext.UserService, s.sessionMgr)
 	apiGroup.POST("/login", wrap(s, userHandler.Login))
+	apiGroup.OPTIONS("/login", apiOptions("POST"))
+	apiGroup.POST("/logout", wrap(s, userHandler.Logout))
+	apiGroup.OPTIONS("/logout", apiOptions("POST"))
 
 	// Authenticated  API routes
 
@@ -163,7 +170,7 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 
 	e.HTTPErrorHandler = mw.ErrorHandler(appCtx)
 
-	sessionStore := session.New(ac.Db)
+	sessionStore := session.New(ac.Db, config.Environment.IsDev())
 
 	s := server{
 		appCtx:     appCtx,
@@ -176,6 +183,12 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 		},
 	}
 
+	// Setup application logging.
+	e.Use(mw.Logging(s.appCtx, s.config.Environment.IsDev()))
+
+	// Load and save sessions.
+	e.Use(mw.LoadSessionData(s.sessionMgr))
+
 	isSetup, _ := ac.SetupService.IsSetup(appCtx)
 
 	if !isSetup {
@@ -184,9 +197,6 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 		s.setupServer()
 		return s.e
 	}
-
-	// Load and save sessions.
-	e.Use(mw.Session(s.sessionMgr))
 
 	apiGroup := s.e.Group("/api")
 	s.apiRoutes(apiGroup)
@@ -197,7 +207,7 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 	return s.e
 }
 
-func mkHomePageHandler(spaContent embed.FS) echo.HandlerFunc {
+func mkHomePageHandler(sm *session.Manager, spaContent embed.FS) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var err error
 		readIndexFile.Do(func() {
@@ -208,10 +218,29 @@ func mkHomePageHandler(spaContent embed.FS) echo.HandlerFunc {
 			}
 			indexFile = b
 		})
+		ctx := c.Request().Context()
 		if err != nil {
-			fmt.Println(err)
-			return err
+			log.Ctx(ctx).Error("could not read SPA index", attr.Err(err))
+			return apperror.InternalError(err)
+		}
+		if !isNonAuthPage(c) {
+			isLoggedIn, err := session.IsLoggedIn(ctx, sm)
+			if err != nil {
+				return apperror.InternalError(err)
+			}
+			if !isLoggedIn {
+				return c.Redirect(http.StatusTemporaryRedirect, "/app/login")
+			}
 		}
 		return c.Blob(200, "text/html", indexFile)
 	}
+}
+
+func isNonAuthPage(c echo.Context) bool {
+	path := c.Request().URL.Path
+	return path == "/app/login" ||
+		path == "/app/logout" ||
+		strings.HasPrefix(path, "/app/setup") ||
+		// @todo should probably remove this
+		strings.HasPrefix(path, "/app/example")
 }

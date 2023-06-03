@@ -40,6 +40,7 @@ async function get(uri: string): Promise<Response> {
 export async function postData<T extends object>(
     response: Retrievable<T>, uri: string, requestJson: JsonValue): Promise<Result<T>> {
     const rs = await axios.post(fullUrl(uri), requestJson, {
+        withCredentials: true,
         headers: {
             'Content-Type': 'application/json'
         }

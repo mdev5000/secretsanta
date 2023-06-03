@@ -41,3 +41,9 @@ var NotAuthenticated = ErrorCode{
 	Code:    CodeNotAuthenticated,
 	Message: "access denied",
 }
+
+var AlreadyLoggedIn = ErrorCode{
+	Status:  http.StatusBadRequest,
+	Code:    CodeInvalidLogin,
+	Message: "already logged in",
+}

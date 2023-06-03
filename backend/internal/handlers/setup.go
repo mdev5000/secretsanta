@@ -142,7 +142,7 @@ func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) resp.R
 	go func() {
 		log.Ctx(h.appCtx).Info("preparing to restart server")
 		// Give a bit of time for the response to be returned to the client.
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 		log.Ctx(h.appCtx).Info("restarting server")
 		// This is captured at the application root and the server will be restarted. This will remove all setup
 		// application routes and install the actual routes.

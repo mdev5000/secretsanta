@@ -16,7 +16,7 @@ func EnsureLoggedIn(ctx context.Context, sm *session.Manager) echo.MiddlewareFun
 			if err != nil {
 				return err
 			}
-			if userId == 0 {
+			if userId == "" {
 				// not logged in
 				return apperror.Error(apperror.NotAuthenticated, errors.New("not authenticated"))
 			}

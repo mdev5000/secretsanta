@@ -67,6 +67,14 @@ npm run report
 ls playwright-report
 ```
 
+#### Docker
+
+You can also run the UI tests via docker:
+
+```bash
+make uitest.test
+```
+
 ### Backend
 
 ```bash

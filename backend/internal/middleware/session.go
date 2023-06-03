@@ -4,10 +4,9 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/labstack/echo/v4"
 	"github.com/mdev5000/secretsanta/internal/util/server"
-	"time"
 )
 
-func Session(s *scs.SessionManager) echo.MiddlewareFunc {
+func LoadSessionData(s *scs.SessionManager) echo.MiddlewareFunc {
 	// LoadAndSave does not work correctly with echo so we can't use it.
 	//return echo.WrapMiddleware(sessionMgr.LoadAndSave)
 
@@ -34,21 +33,6 @@ func Session(s *scs.SessionManager) echo.MiddlewareFunc {
 			if c.Request().MultipartForm != nil {
 				c.Request().MultipartForm.RemoveAll()
 			}
-
-			w := c.Response()
-
-			switch s.Status(ctx) {
-			case scs.Modified:
-				token, expiry, err := s.Commit(ctx)
-				if err != nil {
-					return err
-				}
-				s.WriteSessionCookie(ctx, w, token, expiry)
-			case scs.Destroyed:
-				s.WriteSessionCookie(ctx, w, "", time.Time{})
-			}
-
-			w.Header().Add("Vary", "Cookie")
 
 			return nil
 		}

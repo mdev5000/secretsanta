@@ -1,12 +1,12 @@
 <script lang="ts">
     import {dev, browser} from '$app/environment';
+    import { page } from '$app/stores';
     import {goto} from '$app/navigation';
     import {getData} from "$lib/rest/rest";
     import {Status} from "$lib/requests/setup/status";
 
     import TopMenuBar from "$lib/components/topMenuBar.svelte"
-
-    export const ssr = false;
+    import {isLoggedIn} from "../../lib/auth/auth";
 
     async function checkStatus() {
         const status = await getData<Status>(Status, "/api/setup/status");
@@ -17,6 +17,11 @@
 
     if (browser && dev) {
         checkStatus();
+    }
+
+    // @todo eventually remove example stuff
+    if (!isLoggedIn() && ($page.url.pathname != "/app/example")) {
+        goto("/app/login");
     }
 </script>
 
