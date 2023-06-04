@@ -78,19 +78,19 @@ func run() error {
 }
 
 func runServer(ctx context.Context, ac appcontext.AppContext, cfg config.Config) (err error) {
-	setupCh := make(chan struct{})
-	defer close(setupCh)
+	termCh := make(chan struct{})
+	defer close(termCh)
 
 	serverCfg := server.Config{
 		Environment: env.Environment(cfg.Env),
-		SetupCh:     setupCh,
+		TermCh:      termCh,
 	}
 	address := ":3000"
 
 	var e *echo.Echo
 	go func() {
-		<-setupCh
-		log.Ctx(ctx).Info("setup has been completed, restarting server")
+		<-termCh
+		log.Ctx(ctx).Info("setup or delete-all has been completed, restarting server")
 		if err := e.Shutdown(ctx); err != nil {
 			log.Ctx(ctx).Error("error occurred at shutdown during setup restart", attr.Err(err))
 		}
