@@ -7,6 +7,7 @@ import (
 	"github.com/mdev5000/secretsanta/internal/util/env"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/labstack/echo/v4"
 	"github.com/mdev5000/flog/attr"
@@ -74,12 +75,29 @@ func run() error {
 
 	ac.SetupService = setup.NewService(ac.TransactionMgr, ac.UserService, ac.FamilyService)
 
-	return runServer(ctx, ac, cfg)
+	restart := true
+	for restart {
+		if err := resetCaches(ctx, ac); err != nil {
+			return err
+		}
+		var err error
+		restart, err = runServer(ctx, ac, cfg)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func runServer(ctx context.Context, ac appcontext.AppContext, cfg config.Config) (err error) {
+func resetCaches(ctx context.Context, ac appcontext.AppContext) error {
+	ac.SetupService.ClearCache()
+	return nil
+}
+
+func runServer(ctx context.Context, ac appcontext.AppContext, cfg config.Config) (restart bool, err error) {
 	termCh := make(chan struct{})
-	defer close(termCh)
+	restartLock := sync.RWMutex{}
 
 	serverCfg := server.Config{
 		Environment: env.Environment(cfg.Env),
@@ -90,27 +108,36 @@ func runServer(ctx context.Context, ac appcontext.AppContext, cfg config.Config)
 	var e *echo.Echo
 	go func() {
 		<-termCh
+		restartLock.Lock()
+		restart = true
+		restartLock.Unlock()
 		log.Ctx(ctx).Info("setup or delete-all has been completed, restarting server")
 		if err := e.Shutdown(ctx); err != nil {
 			log.Ctx(ctx).Error("error occurred at shutdown during setup restart", attr.Err(err))
 		}
 	}()
 
-	appIsSetup, err := ac.SetupService.IsSetup(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to determine if app was setup: %w", err)
+	//appIsSetup, err := ac.SetupService.IsSetup(ctx)
+	//if err != nil {
+	//	return false, fmt.Errorf("failed to determine if app was setup: %w", err)
+	//}
+
+	getRestart := func() bool {
+		restartLock.RLock()
+		defer restartLock.RUnlock()
+		return restart
 	}
 
 	e = server.Server(ctx, &ac, &serverCfg)
 	if err := e.Start(address); err != nil && err != http.ErrServerClosed {
-		return err
+		return getRestart(), err
 	}
 
-	if !appIsSetup {
-		log.Ctx(ctx).Info("app started in non-setup state, so restarting server")
-		e = server.Server(ctx, &ac, &serverCfg)
-		return e.Start(address)
-	}
+	//if !appIsSetup {
+	//	log.Ctx(ctx).Info("app started in non-setup state, so restarting server")
+	//	e = server.Server(ctx, &ac, &serverCfg)
+	//	return e.Start(address)
+	//}
 
-	return nil
+	return getRestart(), nil
 }

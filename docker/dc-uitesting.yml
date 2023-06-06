@@ -16,6 +16,7 @@ services:
       - "3000"
     environment:
       MONGO_URI: mongodb://root:rootPW@mongo
+      ENV: test
 
   mongo:
     image: mongo:4.2

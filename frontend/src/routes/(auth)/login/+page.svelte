@@ -41,24 +41,26 @@
         <TextField
                 bind:value={username}
                 label="Username"
+                data-testid="username"
         />
         <br/>
         <TextField
                 type="password"
                 bind:value={password}
                 label="Password"
+                data-testid="password"
         />
         <div class="submit-wrapper">
             {#if status === 'init' }
-                <Button class="submit" variant="raised" on:click={login}>
-                    <Label>Setup</Label>
+                <Button data-testid="login-submit" class="submit" variant="raised" on:click={login}>
+                    <Label>Login</Label>
                 </Button>
             {:else if status === 'logging_in' }
-                <Button class="submit" variant="raised">
+                <Button data-testid="login-submit" class="submit" variant="raised">
                     <Label>Logging in...</Label>
                 </Button>
             {:else if status === 'success' }
-                <Button class="submit" variant="raised">
+                <Button data-testid="login-submit" class="submit" variant="raised">
                     <Label>Success</Label>
                 </Button>
             {/if}

@@ -48,7 +48,7 @@
         if (r2.status == 204) {
             status = 'done';
             setTimeout(() => {
-                goto('/app');
+                goto('/app/login');
             }, 5000);
             return;
         }
@@ -62,7 +62,7 @@
 
     {#if status === 'welcome'}
         <p>Welcome to Secret Santa! Click next to get started.</p>
-        <Button on:click={() => getLeadership()}>Next</Button>
+        <Button data-testid="next-btn" on:click={() => getLeadership()}>Next</Button>
     {:else if status === 'failed'}
         <p>The site is already being setup by another computer or browser.</p>
         <p>If you are unable to complete the setup, please restart the server and refresh the page.</p>
@@ -75,18 +75,21 @@
                 <TextField
                         bind:value={adminUsername}
                         label="Admin Username"
+                        data-testid="admin-username"
                 />
                 <br/>
 
                 <TextField
                         bind:value={adminFirstname}
                         label="Admin First Name"
+                        data-testid="admin-firstname"
                 />
                 <br/>
 
                 <TextField
                         bind:value={adminLastname}
                         label="Admin Last Name"
+                        data-testid="admin-lastname"
                 />
                 <br/>
 
@@ -94,6 +97,7 @@
                         type="password"
                         bind:value={adminPassword}
                         label="Admin Password"
+                        data-testid="admin-password"
                 />
 
             </fieldset>
@@ -105,6 +109,7 @@
                 <TextField
                         bind:value={defaultFamilyName}
                         label="Family Name"
+                        data-testid="default-family-name"
                 />
 
                 <TextField
@@ -116,7 +121,7 @@
 
             <fieldset>
 
-                <Button class="submit" variant="raised" on:click={finalize}>
+                <Button data-testid="setup-submit" class="submit" variant="raised" on:click={finalize}>
                     <Label>Setup</Label>
                 </Button>
 
@@ -124,9 +129,9 @@
 
         </form>
     {:else if status === 'error'}
-        Error occurred while setting up, please try refreshing the page.
+        <p data-testid="status">Error occurred while setting up, please try refreshing the page.</p>
     {:else if status === 'done'}
-        Setup completed, will redirect to app in a moment...
+        <p data-testid="status">Setup completed, will redirect to app in a moment...</p>
     {/if}
 
 

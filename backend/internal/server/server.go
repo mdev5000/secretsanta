@@ -58,6 +58,8 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 	// Setup application logging.
 	e.Use(mw.Logging(s.appCtx, s.config.Environment.IsDev()))
 
+	s.healthRoutes()
+
 	// Load sessions (saved separately due to issues setting headers after body is returned).
 	e.Use(mw.LoadSessionData(s.sessionMgr))
 
@@ -67,6 +69,7 @@ func Server(appCtx context.Context, ac *appcontext.AppContext, config *Config) *
 
 	// If the application as not been set up, start in setup mode.
 	isSetup, _ := ac.SetupService.IsSetup(appCtx)
+	log.Ctx(appCtx).Info("checking setup status", attr.Bool("isSetup", isSetup))
 	if !isSetup {
 		log.Ctx(appCtx).Info("app is not setup, starting in setup mode")
 		// Server starts with a different set of routes when setting up, then panics and restarts.
@@ -153,10 +156,12 @@ func (s *server) testRoutes() {
 	testGroup := s.e.Group("/test")
 
 	testHandler := handlers.Test{
-		Db: s.appContext.Db,
+		Db:     s.appContext.Db,
+		TermCh: s.config.TermCh,
 	}
 
 	testGroup.POST("/delete-all", testHandler.DeleteAll)
+	testGroup.POST("/delete-all-restart", testHandler.DeleteAllAndRestart)
 }
 
 func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
@@ -167,4 +172,11 @@ func (s *server) exampleAPIRoute(apiGroup *echo.Group) {
 		}
 		return resp.Ok(200, &status)
 	}))
+}
+
+func (s *server) healthRoutes() {
+	h := handlers.Health{
+		Db: s.appContext.Db,
+	}
+	s.e.GET("ready", h.Ready)
 }

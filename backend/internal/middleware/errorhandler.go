@@ -24,7 +24,7 @@ func ErrorHandler(appCtx context.Context) echo.HTTPErrorHandler {
 			err = apperror.Error(apperror.ErrorCode{
 				Status:  httpErr.Code,
 				Code:    apperror.CodeEchoError,
-				Message: msg,
+				Message: fmt.Sprintf("path='%s' %s", c.Request().URL.Path, msg),
 			}, err)
 		}
 
@@ -36,6 +36,7 @@ func ErrorHandler(appCtx context.Context) echo.HTTPErrorHandler {
 		attrs := append(appErr.Attr,
 			attr.Int("status", appErr.Status),
 			attr.String("code", appErr.Code),
+			attr.String("errorMessage", appErr.Message),
 			attr.String("description", appErr.Description),
 			attr.Err(err),
 		)

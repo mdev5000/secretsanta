@@ -42,6 +42,13 @@ func NewService(transactionMgr TransactionMgr, users UserService, family FamilyS
 	}
 }
 
+// ClearCache clears cached values.
+func (s *Service) ClearCache() {
+	s.setupMutex.Lock()
+	s.isSetup = false
+	s.setupMutex.Unlock()
+}
+
 func (s *Service) Setup(ctx context.Context, data *Data) error {
 	err := s.transactionMgr.WithTransaction(ctx, func(ctx context.Context) error {
 		if err := s.users.Create(ctx, data.DefaultAdmin, data.DefaultAdminPassword); err != nil {

@@ -45,7 +45,7 @@ func (h *AuthHandler) Login(ctx context.Context, c echo.Context) resp.ResponseEm
 	u, err := h.svc.Login(ctx, data.Username, []byte(data.Password))
 	if err != nil {
 		// log error
-		return resp.EmptyErr(apperror.Error(apperror.InvalidLogin, err, attr.String("user", u.ID)))
+		return resp.EmptyErr(apperror.Error(apperror.InvalidLogin, err, attr.String("username", data.Username)))
 	}
 
 	session.Put[string](ctx, h.sessions, session.UserID, u.ID)

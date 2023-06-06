@@ -146,7 +146,7 @@ func (h *SetupHandler) FinalizeSetup(ctx context.Context, c echo.Context) resp.R
 		log.Ctx(h.appCtx).Info("restarting server")
 		// This is captured at the application root and the server will be restarted. This will remove all setup
 		// application routes and install the actual routes.
-		h.setupCh <- struct{}{}
+		close(h.setupCh)
 	}()
 
 	return resp.Empty(http.StatusNoContent)
