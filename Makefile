@@ -74,9 +74,9 @@ test.all:
 	# Make sure we are not running development docker
 	$(MAKE) dev.docker.down
 # @todo add front-end check back in once fixed.
-#	@echo "Check frontend typing..."
-#	$(MAKE) -C ./frontend check
-#	@echo "Check frontend typing (done)"
+	@echo "Check frontend typing..."
+	$(MAKE) -C ./backend dev.svelte-check
+	@echo "Check frontend typing (done)"
 	@echo "Test frontend..."
 	$(MAKE) -C ./frontend test
 	@echo "Test frontend (done)."

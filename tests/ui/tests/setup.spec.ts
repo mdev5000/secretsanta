@@ -8,7 +8,7 @@ function delay(time) {
     return new Promise(resolve => setTimeout(resolve, time));
 }
 
-async function retryBool(fn: () => Promise<bool>, config: {delay: number, count: number} = undefined): Promise<boolean> {
+async function retryBool(fn: () => Promise<boolean>, config: {delay: number, count: number} = undefined): Promise<boolean> {
     return await retry(async () => {
         const isOk = await fn();
         if (!isOk) {
@@ -95,16 +95,16 @@ test('can setup application', async ({ page }) => {
         if (status && ((await status.textContent()) == 'Success')) {
             return true;
         }
-        const h1 = await page.$('h1', {timeout: 5000});
+        const h1 = await page.$('h1');
         return h1 && ((await h1.textContent()) == 'Secret Santa'); 
     });
 
     expect(loginSuccess, 'logs in successfully').toBe(true);
 
-    // Should login successful and see home page.
+    // Should log in successful and see home page.
 
     await page.goto('/app', {timeout: 5000});
 
     let h1 = await page.textContent('h1', {timeout: 5000});
-    expect(h1).toBe('Secret Santa', 'can see the homepage');
+    expect(h1, 'can see the homepage').toBe('Secret Santa');
 });
