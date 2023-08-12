@@ -139,7 +139,10 @@ func runSvelteCheck(out io.Writer) error {
 	}
 	cmd.Dir = frontendPath
 	o, _ := cmd.CombinedOutput()
-	checks := scw.ParseLines(bytes.NewBuffer(o), scw.IgnoreDataTestIdMessage)
+	checks := scw.ParseLines(bytes.NewBuffer(o), scw.And(
+		scw.IgnoreDataTestIdMessage,
+		scw.IgnoreNodeModules,
+	))
 	success := scw.Passed(checks)
 	for _, check := range checks {
 		check.Print(out)

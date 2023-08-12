@@ -59,12 +59,31 @@ func Passed(msgs []CheckMessage) bool {
 	return true
 }
 
+type Filter = func(message CheckMessage) bool
+
+func And(filter ...Filter) Filter {
+	return func(message CheckMessage) bool {
+		for _, f := range filter {
+			if !f(message) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+// IgnoreNodeModules ignores any errors from the node_modules directory.
+func IgnoreNodeModules(m CheckMessage) bool {
+	return !strings.HasPrefix(m.Filename, "node_modules")
+}
+
+// IgnoreDataTestIdMessage ignores missing data-testid parameters in svelte-check results.
 func IgnoreDataTestIdMessage(m CheckMessage) bool {
 	testIdMatcher := regexp.MustCompile(`^Type '{.*"data-testid": string;.*is not assignable to type`)
 	return !testIdMatcher.MatchString(m.ErrorMessage)
 }
 
-func ParseLines(r io.Reader, filter func(CheckMessage) bool) []CheckMessage {
+func ParseLines(r io.Reader, filter Filter) []CheckMessage {
 	var out []CheckMessage
 	s := bufio.NewScanner(r)
 	for s.Scan() {
