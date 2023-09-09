@@ -53,6 +53,9 @@ build: build.frontend
 frontend.install:
 	$(MAKE) -C ./frontend install
 
+frontend.check:
+	$(MAKE) -C ./backend dev.svelte-check
+
 build.frontend:
 	$(MAKE) -C ./frontend build
 
@@ -75,7 +78,7 @@ test.all:
 	$(MAKE) dev.docker.down
 # @todo add front-end check back in once fixed.
 	@echo "Check frontend typing..."
-	$(MAKE) -C ./backend dev.svelte-check
+	$(MAKE) frontend.check
 	@echo "Check frontend typing (done)"
 	@echo "Test frontend..."
 	$(MAKE) -C ./frontend test
