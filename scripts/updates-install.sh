@@ -10,16 +10,16 @@ cd ../
 
 echo "Updating frontend"
 cd frontend
-ncu -u
+npx npm-check-updates -u
 npm install
 cd ../
 
 echo "Updating UI tests"
 cd tests/ui
-ncu -u
+npx npm-check-updates -u
 npm install
 cd ../../
 
 echo "Updating main project"
-ncu -u
+npx npm-check-updates -u
 npm install

@@ -13,7 +13,7 @@ echo ""
 
 echo "Updates for frontend:"
 cd frontend
-ncu
+npx npm-check-updates
 cd ../
 echo ""
 echo ""
@@ -21,11 +21,11 @@ echo ""
 
 echo "Updates for UI tests"
 cd tests/ui
-ncu
+npx npm-check-updates
 cd ../../
 echo ""
 echo ""
 echo ""
 
 echo "Updates for main project"
-ncu
+npx npm-check-updates
