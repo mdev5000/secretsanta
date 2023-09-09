@@ -4,7 +4,8 @@
   "scripts": {
     "test": "playwright test --trace on",
     "test:ui": "playwright test --trace on --browser firefox --retries 0 --ui",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "playwright:version": "npm list --depth=0 | grep playwright | node ./scripts/playwright-version.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.37.0"
