@@ -17,6 +17,7 @@ require (
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/radovskyb/watcher v1.0.7
 	github.com/rs/zerolog v1.30.0
+	github.com/scim2/filter-parser v1.0.0
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.4
 	go.mongodb.org/mongo-driver v1.12.1

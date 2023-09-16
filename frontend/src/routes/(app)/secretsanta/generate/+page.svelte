@@ -29,7 +29,7 @@
     $: unselectedFamilies = families.filter((f) => !f.selected);
     $: selectedFamilies = families.filter((f) => f.selected);
 
-    let users = [
+    let candidateUsers = [
         {
             id: "john", name: "John Person",
             families: [{name: "Default"}, {name: "Another"}],
@@ -42,7 +42,18 @@
         },
     ];
 
-    let selectedUsers = users.filter((u) => !u.excludeByDefault);
+    let selectedCandidates = candidateUsers.filter((u) => !u.excludeByDefault);
+
+    let addedUsers = [
+        {id: "flog", name: "Flog Tog", families: [{name: "Default"}],
+            excludeByDefault: true,
+            ssExclusions: [{id: "john", name: "John"}],
+        },
+        {id: "lenny", name: "Lenny Benny", families: [{name: "Default"}],
+            excludeByDefault: true,
+            ssExclusions: [{id: "john", name: "John"}],
+        },
+    ];
 
     let secretSantas = [
         {
@@ -68,10 +79,9 @@
     let selectedSecretSantas: string[] = [];
 
     let steps = [
-        "Step 1: Families",
-        "Step 2: Users",
-        "Step 3: Pairing exclusions",
-        "Step 4: Finalize",
+        "Step 1: Users",
+        "Step 2: Pairing exclusions",
+        "Step 3: Finalize",
     ]
     let activeStep = steps[0];
 
@@ -111,10 +121,11 @@
     </div>
 
     {#if activeStep === steps[0]}
-        <div class="step-select-families">
+
+        {#if candidateUsers}
 
             <div class="explanation">
-                Select the families you wish to participate in this Secret Santa.
+                Select the users you wish to participate in this Secret Santa.
             </div>
 
             <fieldset>
@@ -139,20 +150,6 @@
 
             </fieldset>
 
-            <fieldset class="fs-submit">
-                <Button variant="raised" on:click={() => activeStep = steps[1]}>Next</Button>
-            </fieldset>
-
-        </div>
-
-    {:else if activeStep === steps[1]}
-
-        {#if users}
-
-            <div class="explanation">
-                Select the users you wish to participate in this Secret Santa.
-            </div>
-
             <fieldset>
                 <DataTable style="width: 100%;">
                     <Head>
@@ -165,11 +162,11 @@
                         </Row>
                     </Head>
                     <Body>
-                    {#each users as user (user.id)}
+                    {#each candidateUsers as user (user.id)}
                         <Row>
                             <Cell checkbox>
                                 <Checkbox
-                                        bind:group={selectedUsers}
+                                        bind:group={selectedCandidates}
                                         value={user}
                                         valueKey={user.id}
                                 />
@@ -183,15 +180,15 @@
             </fieldset>
 
             <fieldset class="fs-submit">
-                <Button variant="raised" on:click={() => activeStep = steps[2]}>Next</Button>
+                <Button variant="raised" on:click={() => activeStep = steps[1]}>Next</Button>
             </fieldset>
         {/if}
 
 
-    {:else if activeStep === steps[2]}
+    {:else if activeStep === steps[1]}
 
         <fieldset class="skip-button">
-            <Button variant="raised" on:click={() => activeStep = steps[3]}>Skip</Button>
+            <Button variant="raised" on:click={() => activeStep = steps[2]}>Skip</Button>
         </fieldset>
 
         <div class="ss-pairing-exclusions">
@@ -234,11 +231,11 @@
             <Button variant="raised">Customize</Button>
 
             <fieldset class="fs-submit">
-                <Button variant="raised" on:click={() => {activeStep = steps[3]; scroll(0, 0)}}>Next</Button>
+                <Button variant="raised" on:click={() => {activeStep = steps[2]; scroll(0, 0)}}>Next</Button>
             </fieldset>
         </div>
 
-    {:else if activeStep === steps[3]}
+    {:else if activeStep === steps[2]}
 
         <div class="step-finalize">
 
@@ -259,7 +256,7 @@
                 <span>{selectedFamilies.map((f) => f.name).join(",")}</span>
             </div>
 
-            {#if users}
+            {#if candidateUsers}
                 <fieldset>
                     <legend class="h4">Users</legend>
 
@@ -271,7 +268,7 @@
                             </Row>
                         </Head>
                         <Body>
-                        {#each users as user (user.id)}
+                        {#each candidateUsers as user (user.id)}
                             <Row>
                                 <Cell>{user.name}</Cell>
                                 <Cell>Example Person, Example Person 2</Cell>
@@ -339,12 +336,6 @@
 
     .secret-santas {
       margin-bottom: 20px;
-    }
-  }
-
-  .step-select-families {
-    .selected {
-      margin-top: 40px;
     }
   }
 

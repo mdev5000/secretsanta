@@ -21,6 +21,7 @@ const (
 	FieldLastname     = "lastname"
 	FieldPasswordHash = "passwordHash"
 	FieldUpdatedAt    = "updatedAt"
+	FieldFamilyIds    = "familyIDs"
 )
 
 type store struct {
@@ -58,6 +59,7 @@ func (s *store) Create(ctx context.Context, u *types.User, passwordHash []byte) 
 		{FieldPasswordHash, passwordHash},
 		{FieldFirstname, u.Firstname},
 		{FieldLastname, u.Lastname},
+		{FieldFamilyIds, u.FamilyIDs},
 		{FieldUpdatedAt, updatedAt},
 	})
 	if err != nil {

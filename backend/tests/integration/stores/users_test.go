@@ -23,6 +23,7 @@ func Test_canCreateNewUsers(t *testing.T) {
 		Username:  "bob",
 		Firstname: "Bob",
 		Lastname:  "Test",
+		FamilyIDs: []string{"family1", "family2"},
 	}
 	called := time.Now().UTC()
 	err := svc.Create(ctx, &u, []byte("mypassword"))
@@ -37,7 +38,6 @@ func Test_canCreateNewUsers(t *testing.T) {
 	newUser, err := svc.FindByID(ctx, u.ID)
 	require.NoError(t, err)
 
-	//compare.Equal(t, newUser, &u, compare.IgnoreFields(types.User{}, "UpdatedAt", "PasswordHash"))
 	rqUsersMatches(t, newUser, &u)
 }
 

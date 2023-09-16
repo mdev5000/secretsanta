@@ -13,4 +13,5 @@ type User struct {
 	PasswordHash []byte
 	Firstname    string
 	Lastname     string
+	FamilyIDs    []string
 }
