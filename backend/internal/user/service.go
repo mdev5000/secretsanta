@@ -8,12 +8,12 @@ import (
 )
 
 type Service struct {
-	store store
+	store Store
 }
 
 func NewService(userCollection *mongo.Collection) *Service {
-	userStore := store{
-		users: userCollection,
+	userStore := Store{
+		Users: userCollection,
 	}
 
 	return &Service{
@@ -49,7 +49,7 @@ func (s *Service) Create(ctx context.Context, u *types.User, password []byte) er
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
-	return s.store.Create(ctx, u, passwordHash)
+	return s.store.CreateWithNewId(ctx, u, passwordHash)
 }
 
 func (s *Service) FindByID(ctx context.Context, id types.ID) (*types.User, error) {

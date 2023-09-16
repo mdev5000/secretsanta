@@ -63,6 +63,16 @@ type (
 	AttrPath         = scim2.AttributePath
 )
 
+func OpToBSON(op Token) (string, error) {
+	switch op {
+	case OR:
+		return "$or", nil
+	case AND:
+		return "$and", nil
+	}
+	return "", fmt.Errorf("bad binary operator '%s'", op.String())
+}
+
 func ToBSONNumericFilter(a AttrExpression, value interface{}) (bson.M, error) {
 	var op string
 	switch a.CompareOperator {

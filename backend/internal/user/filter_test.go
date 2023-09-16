@@ -7,40 +7,87 @@ import (
 	"testing"
 )
 
-func TestParseFilter(t *testing.T) {
-	parseFilter := func(e string) (bson.M, error) {
-		ex, err := scim.ParseString(e)
-		if err != nil {
-			return nil, err
-		}
-		return ParseFilter(ex)
+func parseFilter(e string) (bson.M, error) {
+	ex, err := scim.ParseString(e)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFilter(ex)
+}
+
+type testCase struct {
+	expr     string
+	expected bson.M
+}
+
+func TestParseFilter_simple(t *testing.T) {
+	cases := []testCase{
+		{
+			`username eq "john01"`,
+			bson.M{
+				FieldUsername: bson.M{"$eq": "john01"},
+			},
+		},
+		{
+			`firstname ne "greg"`,
+			bson.M{
+				FieldFirstname: bson.M{"$ne": "greg"},
+			},
+		},
+		{
+			`families[id eq "family1"]"`,
+			bson.M{
+				FieldFamilyIds: bson.M{"$eq": "family1"},
+			},
+		},
 	}
 
-	t.Run("simple expressions", func(t *testing.T) {
-		cases := []struct {
-			expr     string
-			expected bson.M
-		}{
-			{
-				`username eq "john01"`,
-				bson.M{
-					FieldUsername: bson.M{"$eq": "john01"},
-				},
-			},
-			{
-				`firstname ne "greg"`,
-				bson.M{
-					FieldFirstname: bson.M{"$ne": "greg"},
-				},
-			},
-		}
+	for _, tc := range cases {
+		t.Run(tc.expr, func(t *testing.T) {
+			b, err := parseFilter(tc.expr)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, b)
+		})
+	}
+}
 
-		for _, tc := range cases {
-			t.Run(tc.expr, func(t *testing.T) {
-				b, err := parseFilter(tc.expr)
-				require.NoError(t, err)
-				require.Equal(t, tc.expected, b)
-			})
-		}
-	})
+func TestParseFilter_binaryExpr(t *testing.T) {
+	cases := []testCase{
+		{
+			`(username eq "john01") and ((firstname eq "fred") or (lastname ne "john"))"`,
+			bson.M{
+				"$and": bson.A{
+					bson.M{FieldUsername: bson.M{"$eq": "john01"}},
+					bson.M{
+						"$or": bson.A{
+							bson.M{FieldFirstname: bson.M{"$eq": "fred"}},
+							bson.M{FieldLastname: bson.M{"$ne": "john"}},
+						},
+					},
+				},
+			},
+		},
+		{
+			`(username eq "user1") and families[id eq "1" or id eq "3"]`,
+			bson.M{
+				"$and": bson.A{
+					bson.M{FieldUsername: bson.M{"$eq": "user1"}},
+					bson.M{
+						"$or": bson.A{
+							bson.M{FieldFamilyIds: bson.M{"$eq": "1"}},
+							bson.M{FieldFamilyIds: bson.M{"$eq": "3"}},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.expr, func(t *testing.T) {
+			b, err := parseFilter(tc.expr)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, b)
+		})
+	}
 }
