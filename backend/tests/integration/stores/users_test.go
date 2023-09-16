@@ -108,21 +108,37 @@ func Test_canFindUsersByFilter(t *testing.T) {
 	}
 	sort.Strings(expectedIds)
 
-	filter := bson.M{
-		"$or": bson.A{
-			bson.M{user.FieldFamilyIds: bson.M{"$eq": "family1"}},
-			bson.M{user.FieldFamilyIds: bson.M{"$eq": "family2"}},
+	cases := []struct {
+		name   string
+		filter bson.M
+	}{
+		{
+			name: "id equal",
+			filter: bson.M{
+				"$or": bson.A{
+					bson.M{user.FieldFamilyIds: bson.M{"$eq": "family1"}},
+					bson.M{user.FieldFamilyIds: bson.M{"$eq": "family2"}},
+				},
+			},
+		},
+		{
+			name:   "id in",
+			filter: bson.M{user.FieldFamilyIds: bson.M{"$in": bson.A{"family1", "family2"}}},
 		},
 	}
 
-	results, err := store.FindAll(ctx, filter)
-	require.NoError(t, err)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			results, err := store.FindAll(ctx, tc.filter)
+			require.NoError(t, err)
 
-	ids := make([]string, len(results))
-	for i, r := range results {
-		ids[i] = r.ID
+			ids := make([]string, len(results))
+			for i, r := range results {
+				ids[i] = r.ID
+			}
+			sort.Strings(ids)
+
+			require.Equal(t, expectedIds, ids)
+		})
 	}
-	sort.Strings(ids)
-
-	require.Equal(t, expectedIds, ids)
 }

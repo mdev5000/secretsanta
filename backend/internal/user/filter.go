@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/mdev5000/secretsanta/internal/types"
 	"github.com/mdev5000/secretsanta/internal/util/scim"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -9,7 +10,19 @@ const (
 	FilterFieldFamilies = "families"
 )
 
-func ParseFilter(expr scim.Expression) (bson.M, error) {
+type FamilyFinder interface {
+	FindFamilies(expr scim.Expression) ([]types.Family, error)
+}
+
+type Finder struct {
+	families FamilyFinder
+}
+
+func NewFinder(families FamilyFinder) *Finder {
+	return &Finder{families: families}
+}
+
+func (f *Finder) ParseFilter(expr scim.Expression) (bson.M, error) {
 	switch e := expr.(type) {
 
 	case scim.BinaryExpression:
@@ -18,12 +31,12 @@ func ParseFilter(expr scim.Expression) (bson.M, error) {
 			if err != nil {
 				return nil, err
 			}
-			x, err := ParseFilter(e.X)
+			x, err := f.ParseFilter(e.X)
 			if err != nil {
 				return nil, err
 			}
 
-			y, err := ParseFilter(e.Y)
+			y, err := f.ParseFilter(e.Y)
 			if err != nil {
 				return nil, err
 			}
@@ -33,70 +46,88 @@ func ParseFilter(expr scim.Expression) (bson.M, error) {
 		}
 
 	case scim.AttrExpression, scim.ValuePath:
-		return parseValue(expr)
+		return f.parseValue(expr)
 	}
 	return nil, scim.ErrInvalidExpr
 }
 
-func parseValue(expr scim.Expression) (bson.M, error) {
+func (f *Finder) parseValue(expr scim.Expression) (bson.M, error) {
 	switch e := expr.(type) {
 	case scim.AttrExpression:
 		return parseFilterAttr(e)
 	case scim.ValuePath:
-		return parseValuePath(e)
+		return f.parseValuePath(e)
 	}
 	return nil, scim.ErrInvalidExpr
 }
 
-func parseValuePath(a scim.ValuePath) (bson.M, error) {
+func (f *Finder) parseValuePath(a scim.ValuePath) (bson.M, error) {
 	switch a.AttributeName {
 	case FilterFieldFamilies:
-		return parseFamiliesExpr(a.ValueExpression)
+		b, err, ok := f.parseInlineFamiliesExpr(a.ValueExpression)
+		if ok {
+			return b, err
+		}
+		return f.parseFamiliesExpr(a.ValueExpression)
 	}
 	return nil, scim.ErrInvalidExpr
 }
 
-func parseFamiliesExpr(expr scim.Expression) (bson.M, error) {
+// parseInlineFamiliesExpr tries to avoid a second mongo call to families. If only the id is required
+// the sub call can be avoided.
+func (f *Finder) parseInlineFamiliesExpr(expr scim.Expression) (bson.M, error, bool) {
 	switch e := expr.(type) {
 
 	case scim.BinaryExpression:
 		{
 			op, err := scim.OpToBSON(e.CompareOperator)
 			if err != nil {
-				return nil, err
+				return nil, err, true
 			}
-			x, err := parseFamiliesExpr(e.X)
-			if err != nil {
-				return nil, err
+			x, err, ok := f.parseInlineFamiliesExpr(e.X)
+			if err != nil || !ok {
+				return nil, err, ok
 			}
 
-			y, err := parseFamiliesExpr(e.Y)
-			if err != nil {
-				return nil, err
+			y, err, ok := f.parseInlineFamiliesExpr(e.Y)
+			if err != nil || !ok {
+				return nil, err, ok
 			}
 			return bson.M{
 				op: bson.A{x, y},
-			}, nil
+			}, nil, true
 		}
 
 	case scim.AttrExpression:
 		{
 			if e.AttributePath.AttributeName != "id" {
-				return nil, scim.ErrBadAttr{
-					Reason: "unsupported user attribute",
-					Attr:   e.AttributePath.String(),
-				}
+				return nil, nil, false
 			}
 			if err := scim.EnsureOperatorSupported(e, scim.EQ, scim.NE); err != nil {
-				return nil, err
+				return nil, err, true
 			}
 			filter, err := scim.ToBSONStringFilter(e, e.CompareValue)
 			return bson.M{
 				FieldFamilyIds: filter,
-			}, err
+			}, err, true
 		}
 	}
-	return nil, scim.ErrInvalidExpr
+
+	return nil, nil, false
+}
+
+func (f *Finder) parseFamiliesExpr(expr scim.Expression) (bson.M, error) {
+	families, err := f.families.FindFamilies(expr)
+	if err != nil {
+		return nil, err
+	}
+	filter := make(bson.A, len(families))
+	for i, family := range families {
+		filter[i] = family.ID
+	}
+	return bson.M{
+		FieldFamilyIds: bson.M{"$in": filter},
+	}, err
 }
 
 func parseFilterAttr(a scim.AttrExpression) (bson.M, error) {
