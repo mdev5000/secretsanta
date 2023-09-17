@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/mdev5000/secretsanta/internal/types"
 	"github.com/mdev5000/secretsanta/internal/util/scim"
+	"github.com/mdev5000/secretsanta/internal/util/validator"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -134,7 +135,12 @@ func parseFilterAttr(a scim.AttrExpression) (bson.M, error) {
 	switch a.AttributePath.AttributeName {
 	case FieldUsername, FieldFirstname, FieldLastname:
 		// @todo improve the error
-		filter, err := scim.ToBSONStringFilter(a, a.CompareValue)
+		value := a.CompareValue
+		err := validator.ValidateSingle(a.AttributePath.AttributeName, value, validator.StringSearchField)
+		if err != nil {
+			return nil, err
+		}
+		filter, err := scim.ToBSONStringFilter(a, value)
 		return bson.M{
 			a.AttributePath.AttributeName: filter,
 		}, err
